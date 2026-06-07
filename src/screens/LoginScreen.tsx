@@ -11,9 +11,10 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../contexts/AuthContext';
 
-export default function LoginScreen() {
+export default function LoginScreen({ navigation }: any) {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -28,12 +29,37 @@ export default function LoginScreen() {
 
     try {
       setIsLoading(true);
-      await login(email.trim(), senha);
-    } catch (error: any) {
-      Alert.alert(
-        'Erro de acesso',
-        error.response?.data?.message || 'Credenciais inválidas. Tente novamente.'
-      );
+
+      // Tenta login na API primeiro
+      try {
+        await login(email.trim(), senha);
+        return;
+      } catch (apiError: any) {
+        // Se a API falhar (offline/erro), tenta login local pelo AsyncStorage
+        const raw = await AsyncStorage.getItem('@orbit_users');
+        if (raw) {
+          const users: any[] = JSON.parse(raw);
+          const user = users.find(
+            (u) =>
+              u.email.toLowerCase() === email.trim().toLowerCase() &&
+              u.senha === senha
+          );
+          if (user) {
+            // Simula sessão local
+            await AsyncStorage.setItem('@orbit_token', 'local_token_' + user.email);
+            await AsyncStorage.setItem(
+              '@orbit_user',
+              JSON.stringify({ id: 0, nome: user.nome, email: user.email, municipio: user.municipio })
+            );
+            await login(email.trim(), senha).catch(() => {});
+            return;
+          }
+        }
+        Alert.alert(
+          'Erro de acesso',
+          apiError.response?.data?.message || 'Credenciais inválidas. Tente novamente.'
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -106,6 +132,22 @@ export default function LoginScreen() {
             ) : (
               <Text style={styles.buttonText}>Acessar plataforma</Text>
             )}
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>ou</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* Link Cadastro */}
+          <TouchableOpacity
+            style={styles.registerBtn}
+            onPress={() => navigation.navigate('Register')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.registerBtnText}>✨ Criar nova conta</Text>
           </TouchableOpacity>
         </View>
 
@@ -225,6 +267,34 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     letterSpacing: 0.3,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+    gap: 10,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#1E293B',
+  },
+  dividerText: {
+    color: '#334155',
+    fontSize: 12,
+  },
+  registerBtn: {
+    backgroundColor: '#0F1420',
+    borderRadius: 14,
+    paddingVertical: 15,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#6366F1',
+  },
+  registerBtnText: {
+    color: '#A5B4FC',
+    fontSize: 15,
+    fontWeight: '600',
   },
   footer: {
     alignItems: 'center',
