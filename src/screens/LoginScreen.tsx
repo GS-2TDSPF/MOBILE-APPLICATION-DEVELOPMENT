@@ -10,9 +10,12 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
+  Image,
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../contexts/AuthContext';
+import { COLORS, FONTS, RADIUS } from '../utils/theme';
 
 export default function LoginScreen({ navigation }: any) {
   const { login } = useAuth();
@@ -29,37 +32,12 @@ export default function LoginScreen({ navigation }: any) {
 
     try {
       setIsLoading(true);
-
-      // Tenta login na API primeiro
-      try {
-        await login(email.trim(), senha);
-        return;
-      } catch (apiError: any) {
-        // Se a API falhar (offline/erro), tenta login local pelo AsyncStorage
-        const raw = await AsyncStorage.getItem('@orbit_users');
-        if (raw) {
-          const users: any[] = JSON.parse(raw);
-          const user = users.find(
-            (u) =>
-              u.email.toLowerCase() === email.trim().toLowerCase() &&
-              u.senha === senha
-          );
-          if (user) {
-            // Simula sessão local
-            await AsyncStorage.setItem('@orbit_token', 'local_token_' + user.email);
-            await AsyncStorage.setItem(
-              '@orbit_user',
-              JSON.stringify({ id: 0, nome: user.nome, email: user.email, municipio: user.municipio })
-            );
-            await login(email.trim(), senha).catch(() => {});
-            return;
-          }
-        }
-        Alert.alert(
-          'Erro de acesso',
-          apiError.response?.data?.message || 'Credenciais inválidas. Tente novamente.'
-        );
-      }
+      await login(email.trim(), senha);
+    } catch (apiError: any) {
+      Alert.alert(
+        'Erro de acesso',
+        apiError.response?.data?.message || 'Credenciais inválidas. Tente novamente.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -70,28 +48,35 @@ export default function LoginScreen({ navigation }: any) {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        {/* Header */}
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Logo */}
         <View style={styles.header}>
-          <Text style={styles.icon}>🛰️</Text>
-          <Text style={styles.brand}>OrbitAlert</Text>
+          <Image
+            source={require('../../assets/images/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
           <Text style={styles.subtitle}>Plataforma de Alertas por Satélite</Text>
         </View>
 
-        {/* Card de Login */}
+        {/* Card */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Entrar na plataforma</Text>
           <Text style={styles.cardSubtitle}>Acesso restrito a gestores municipais</Text>
 
-          {/* Campo Email */}
+          {/* Email */}
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>E-mail institucional</Text>
+            <Text style={styles.inputLabel}>E-MAIL INSTITUCIONAL</Text>
             <View style={styles.inputWrapper}>
-              <Text style={styles.inputIcon}>✉️</Text>
+              <Feather name="mail" size={16} color={COLORS.textMuted} />
               <TextInput
                 style={styles.input}
                 placeholder="seu@municipio.gov.br"
-                placeholderTextColor="#334155"
+                placeholderTextColor={COLORS.textDimmed}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -101,21 +86,21 @@ export default function LoginScreen({ navigation }: any) {
             </View>
           </View>
 
-          {/* Campo Senha */}
+          {/* Senha */}
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Senha</Text>
+            <Text style={styles.inputLabel}>SENHA</Text>
             <View style={styles.inputWrapper}>
-              <Text style={styles.inputIcon}>🔒</Text>
+              <Feather name="lock" size={16} color={COLORS.textMuted} />
               <TextInput
                 style={styles.input}
                 placeholder="••••••••"
-                placeholderTextColor="#334155"
+                placeholderTextColor={COLORS.textDimmed}
                 value={senha}
                 onChangeText={setSenha}
                 secureTextEntry={!showSenha}
               />
               <TouchableOpacity onPress={() => setShowSenha(!showSenha)}>
-                <Text style={styles.inputIcon}>{showSenha ? '🙈' : '👁️'}</Text>
+                <Feather name={showSenha ? 'eye-off' : 'eye'} size={16} color={COLORS.textMuted} />
               </TouchableOpacity>
             </View>
           </View>
@@ -141,21 +126,20 @@ export default function LoginScreen({ navigation }: any) {
             <View style={styles.dividerLine} />
           </View>
 
-          {/* Link Cadastro */}
+          {/* Cadastro */}
           <TouchableOpacity
             style={styles.registerBtn}
             onPress={() => navigation.navigate('Register')}
             activeOpacity={0.8}
           >
-            <Text style={styles.registerBtnText}>✨ Criar nova conta</Text>
+            <Feather name="user-plus" size={16} color={COLORS.primaryLight} />
+            <Text style={styles.registerBtnText}>Criar nova conta</Text>
           </TouchableOpacity>
         </View>
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Dados fornecidos por ESA Copernicus · Sentinel-1
-          </Text>
+          <Text style={styles.footerText}>Dados: ESA Copernicus · Sentinel-1</Text>
           <Text style={styles.footerVersion}>v1.0.0 · FIAP Global Solution 2026</Text>
         </View>
       </ScrollView>
@@ -164,42 +148,27 @@ export default function LoginScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0B0F1A',
-  },
+  container: { flex: 1, backgroundColor: COLORS.bgPrimary },
   scroll: {
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingVertical: 60,
     justifyContent: 'center',
   },
-  header: {
-    alignItems: 'center',
-    marginBottom: 36,
-  },
-  icon: {
-    fontSize: 52,
-    marginBottom: 12,
-  },
-  brand: {
-    color: '#F1F5F9',
-    fontSize: 32,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
+  header: { alignItems: 'center', marginBottom: 36, gap: 10 },
+  logo: { width: 220, height: 80 },
   subtitle: {
-    color: '#64748B',
+    color: COLORS.textMuted,
     fontSize: 13,
-    marginTop: 6,
+    fontFamily: FONTS.medium,
     letterSpacing: 0.3,
   },
   card: {
-    backgroundColor: '#1A1F2E',
-    borderRadius: 20,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: RADIUS.xl,
     padding: 24,
     borderWidth: 1,
-    borderColor: '#1E293B',
+    borderColor: COLORS.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
@@ -207,65 +176,59 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   cardTitle: {
-    color: '#F1F5F9',
+    color: COLORS.textPrimary,
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: FONTS.bold,
     marginBottom: 4,
   },
   cardSubtitle: {
-    color: '#475569',
+    color: COLORS.textMuted,
     fontSize: 13,
+    fontFamily: FONTS.regular,
     marginBottom: 28,
   },
-  inputGroup: {
-    marginBottom: 18,
-  },
+  inputGroup: { marginBottom: 18 },
   inputLabel: {
-    color: '#94A3B8',
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.5,
+    color: COLORS.textSecondary,
+    fontSize: 10,
+    fontFamily: FONTS.semiBold,
+    letterSpacing: 0.8,
     marginBottom: 8,
-    textTransform: 'uppercase',
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0F1420',
-    borderRadius: 12,
+    backgroundColor: COLORS.bgTertiary,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: '#1E293B',
+    borderColor: COLORS.border,
     paddingHorizontal: 14,
-    gap: 10,
-  },
-  inputIcon: {
-    fontSize: 16,
+    gap: 12,
   },
   input: {
     flex: 1,
-    color: '#F1F5F9',
+    color: COLORS.textPrimary,
     fontSize: 15,
+    fontFamily: FONTS.regular,
     paddingVertical: 14,
   },
   button: {
-    backgroundColor: '#6366F1',
-    borderRadius: 14,
+    backgroundColor: COLORS.primary,
+    borderRadius: RADIUS.md,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 8,
-    shadowColor: '#6366F1',
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
     elevation: 8,
   },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
+  buttonDisabled: { opacity: 0.6 },
   buttonText: {
     color: '#FFF',
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 15,
+    fontFamily: FONTS.semiBold,
     letterSpacing: 0.3,
   },
   divider: {
@@ -274,39 +237,37 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     gap: 10,
   },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#1E293B',
-  },
+  dividerLine: { flex: 1, height: 1, backgroundColor: COLORS.border },
   dividerText: {
-    color: '#334155',
+    color: COLORS.textDimmed,
     fontSize: 12,
+    fontFamily: FONTS.regular,
   },
   registerBtn: {
-    backgroundColor: '#0F1420',
-    borderRadius: 14,
-    paddingVertical: 15,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.bgTertiary,
+    borderRadius: RADIUS.md,
+    paddingVertical: 15,
     borderWidth: 1,
-    borderColor: '#6366F1',
+    borderColor: COLORS.primary,
+    gap: 8,
   },
   registerBtnText: {
-    color: '#A5B4FC',
+    color: COLORS.primaryLight,
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
-  footer: {
-    alignItems: 'center',
-    marginTop: 36,
-    gap: 4,
-  },
+  footer: { alignItems: 'center', marginTop: 36, gap: 4 },
   footerText: {
-    color: '#334155',
+    color: COLORS.textDimmed,
     fontSize: 11,
+    fontFamily: FONTS.regular,
   },
   footerVersion: {
-    color: '#1E293B',
+    color: COLORS.border,
     fontSize: 10,
+    fontFamily: FONTS.regular,
   },
 });

@@ -1,193 +1,139 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Linking,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
-import { useAlertContext } from '../contexts/AlertContext';
-import { RISK_COLORS, RISK_LABELS } from '../utils/riskColors';
+import { COLORS, FONTS, RADIUS } from '../utils/theme';
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation }: any) {
   const { user, logout } = useAuth();
-  const { alerts } = useAlertContext();
 
-  const totalAlertas = alerts.length;
-  const alertasCriticos = alerts.filter((a) => a.nivel >= 4).length;
-  const alertasAtivos = alerts.filter((a) => a.ativo).length;
+  const handleLogout = () => {
+    Alert.alert('Sair da conta', 'Tem certeza que deseja sair do sistema?', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Sair', style: 'destructive', onPress: logout },
+    ]);
+  };
+
+  const getInitials = (name: string) => {
+    if (!name) return 'GP';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Avatar */}
-      <View style={styles.avatarContainer}>
+      {/* Header do Perfil */}
+      <View style={styles.profileCard}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {user?.nome ? user.nome.charAt(0).toUpperCase() : '?'}
-          </Text>
+          <Text style={styles.avatarText}>{getInitials(user?.nome || '')}</Text>
         </View>
-        <Text style={styles.name}>{user?.nome ?? '—'}</Text>
-        <Text style={styles.email}>{user?.email ?? '—'}</Text>
-        {user?.municipio && (
-          <View style={styles.municipioTag}>
-            <Text style={styles.municipioText}>📍 {user.municipio}</Text>
-          </View>
-        )}
+        <Text style={styles.name}>{user?.nome || 'Gestor Público'}</Text>
+        <Text style={styles.role}>{user?.cargo || 'Defesa Civil'}</Text>
+        <View style={styles.badgeRow}>
+          <Feather name="map-pin" size={12} color={COLORS.primaryLight} />
+          <Text style={styles.badgeText}>{user?.municipio || 'Município não informado'}</Text>
+        </View>
       </View>
 
-      {/* Estatísticas */}
-      <View style={styles.statsRow}>
-        <StatCard label="Total" value={totalAlertas} icon="📋" />
-        <StatCard label="Ativos" value={alertasAtivos} icon="🟢" />
-        <StatCard label="Críticos" value={alertasCriticos} icon="🔴" />
-      </View>
-
-      {/* Seção: Legenda de risco */}
+      {/* Informações da Conta */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>📊 Tabela de Riscos</Text>
-        {([1, 2, 3, 4, 5] as const).map((nivel) => (
-          <View key={nivel} style={styles.riskRow}>
-            <View
-              style={[
-                styles.riskDot,
-                { backgroundColor: RISK_COLORS[nivel] },
-              ]}
-            />
-            <Text style={styles.riskLabel}>
-              Nível {nivel} — {RISK_LABELS[nivel]}
-            </Text>
+        <Text style={styles.sectionTitle}>Informações da Conta</Text>
+        <View style={styles.card}>
+          <View style={styles.infoRow}>
+            <Feather name="mail" size={16} color={COLORS.textMuted} />
+            <Text style={styles.infoText}>{user?.email}</Text>
           </View>
-        ))}
+          <View style={styles.divider} />
+          <View style={styles.infoRow}>
+            <Feather name="shield" size={16} color={COLORS.textMuted} />
+            <Text style={styles.infoText}>Permissão: Acesso Total</Text>
+          </View>
+        </View>
       </View>
 
-      {/* Seção: Sobre */}
+      {/* Configurações */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>ℹ️ Sobre o OrbitAlert</Text>
-        <Text style={styles.aboutText}>
-          Plataforma de alertas de desastres naturais baseada em dados de satélite
-          Sentinel-1 (ESA/Copernicus) e Inteligência Artificial.
-        </Text>
-        <TouchableOpacity
-          style={styles.linkBtn}
-          onPress={() => Linking.openURL('https://java-advanced-2-7tix.onrender.com')}
-        >
-          <Text style={styles.linkBtnText}>🌐 API Documentation</Text>
-        </TouchableOpacity>
+        <Text style={styles.sectionTitle}>Configurações</Text>
+        <View style={styles.card}>
+          <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate('Notifications')}>
+            <View style={styles.actionLeft}>
+              <Feather name="bell" size={18} color={COLORS.textPrimary} />
+              <Text style={styles.actionText}>Notificações e Alertas</Text>
+            </View>
+            <Feather name="chevron-right" size={18} color={COLORS.textMuted} />
+          </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate('Security')}>
+            <View style={styles.actionLeft}>
+              <Feather name="lock" size={18} color={COLORS.textPrimary} />
+              <Text style={styles.actionText}>Segurança e Senha</Text>
+            </View>
+            <Feather name="chevron-right" size={18} color={COLORS.textMuted} />
+          </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate('Help')}>
+            <View style={styles.actionLeft}>
+              <Feather name="help-circle" size={18} color={COLORS.textPrimary} />
+              <Text style={styles.actionText}>Central de Ajuda</Text>
+            </View>
+            <Feather name="chevron-right" size={18} color={COLORS.textMuted} />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Logout */}
-      <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
+      {/* Botão Sair */}
+      <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+        <Feather name="log-out" size={18} color={COLORS.danger} />
         <Text style={styles.logoutText}>Sair da conta</Text>
       </TouchableOpacity>
-
-      <Text style={styles.version}>OrbitAlert v1.0.0 · FIAP GS 2026</Text>
+      
+      <Text style={styles.version}>Versão 1.0.0 (Build 2026)</Text>
     </ScrollView>
   );
 }
 
-function StatCard({ label, value, icon }: { label: string; value: number; icon: string }) {
-  return (
-    <View style={styles.statCard}>
-      <Text style={styles.statIcon}>{icon}</Text>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0B0F1A' },
-  content: { padding: 20, paddingBottom: 60, alignItems: 'center' },
-  avatarContainer: { alignItems: 'center', marginBottom: 28 },
+  container: { flex: 1, backgroundColor: COLORS.bgPrimary },
+  content: { padding: 20, paddingBottom: 40 },
+  profileCard: {
+    alignItems: 'center', backgroundColor: COLORS.bgCard,
+    padding: 24, borderRadius: RADIUS.xl, marginBottom: 24,
+    borderWidth: 1, borderColor: COLORS.border,
+  },
   avatar: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: '#6366F1',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-    shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 16,
-    elevation: 10,
+    width: 80, height: 80, borderRadius: 40,
+    backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center',
+    marginBottom: 16, borderWidth: 4, borderColor: COLORS.bgSecondary,
   },
-  avatarText: { color: '#FFF', fontSize: 38, fontWeight: '800' },
-  name: { color: '#F1F5F9', fontSize: 22, fontWeight: '700' },
-  email: { color: '#64748B', fontSize: 13, marginTop: 4 },
-  municipioTag: {
-    backgroundColor: '#1A1F2E',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: '#1E293B',
+  avatarText: { color: '#FFF', fontSize: 28, fontFamily: FONTS.bold },
+  name: { color: COLORS.textPrimary, fontSize: 20, fontFamily: FONTS.bold, marginBottom: 4 },
+  role: { color: COLORS.textSecondary, fontSize: 14, fontFamily: FONTS.regular, marginBottom: 12 },
+  badgeRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: `${COLORS.primary}15`, paddingHorizontal: 12, paddingVertical: 6,
+    borderRadius: RADIUS.full,
   },
-  municipioText: { color: '#94A3B8', fontSize: 13 },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 24,
-    width: '100%',
+  badgeText: { color: COLORS.primaryLight, fontSize: 13, fontFamily: FONTS.medium },
+  section: { marginBottom: 24 },
+  sectionTitle: { color: COLORS.textPrimary, fontSize: 16, fontFamily: FONTS.semiBold, marginBottom: 12, paddingHorizontal: 4 },
+  card: {
+    backgroundColor: COLORS.bgCard, borderRadius: RADIUS.lg,
+    borderWidth: 1, borderColor: COLORS.border,
   },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#1A1F2E',
-    borderRadius: 14,
-    padding: 14,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#1E293B',
-  },
-  statIcon: { fontSize: 22, marginBottom: 6 },
-  statValue: { color: '#F1F5F9', fontSize: 22, fontWeight: '800' },
-  statLabel: { color: '#64748B', fontSize: 11, marginTop: 2 },
-  section: {
-    backgroundColor: '#1A1F2E',
-    borderRadius: 16,
-    padding: 16,
-    width: '100%',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#1E293B',
-  },
-  sectionTitle: {
-    color: '#94A3B8',
-    fontSize: 13,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 14,
-  },
-  riskRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
-  riskDot: { width: 12, height: 12, borderRadius: 6 },
-  riskLabel: { color: '#CBD5E1', fontSize: 14 },
-  aboutText: { color: '#94A3B8', fontSize: 14, lineHeight: 22, marginBottom: 14 },
-  linkBtn: {
-    backgroundColor: '#0F1420',
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: '#6366F1',
-    alignSelf: 'flex-start',
-  },
-  linkBtnText: { color: '#A5B4FC', fontSize: 13, fontWeight: '600' },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 },
+  infoText: { color: COLORS.textPrimary, fontSize: 14, fontFamily: FONTS.medium },
+  divider: { height: 1, backgroundColor: COLORS.border },
+  actionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 },
+  actionLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  actionText: { color: COLORS.textPrimary, fontSize: 15, fontFamily: FONTS.medium },
   logoutBtn: {
-    backgroundColor: '#1A1F2E',
-    borderRadius: 14,
-    paddingVertical: 16,
-    paddingHorizontal: 40,
-    borderWidth: 1,
-    borderColor: '#EF4444',
-    marginBottom: 16,
-    width: '100%',
-    alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: `${COLORS.danger}15`, borderWidth: 1, borderColor: COLORS.danger,
+    paddingVertical: 16, borderRadius: RADIUS.md, marginTop: 12,
   },
-  logoutText: { color: '#EF4444', fontSize: 15, fontWeight: '700' },
-  version: { color: '#1E293B', fontSize: 11 },
+  logoutText: { color: COLORS.danger, fontSize: 15, fontFamily: FONTS.semiBold },
+  version: { color: COLORS.textMuted, fontSize: 12, fontFamily: FONTS.regular, textAlign: 'center', marginTop: 32 },
 });

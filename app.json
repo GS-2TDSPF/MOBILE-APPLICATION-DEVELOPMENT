@@ -29,6 +29,9 @@
     },
     "extra": {
       "apiBaseUrl": "https://java-advanced-2-7tix.onrender.com"
-    }
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }

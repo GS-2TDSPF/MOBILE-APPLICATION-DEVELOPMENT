@@ -1,104 +1,145 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  RefreshControl,
-  TouchableOpacity,
-  Dimensions,
+  View, Text, StyleSheet, ScrollView,
+  RefreshControl, TouchableOpacity,
 } from 'react-native';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAlertContext } from '../contexts/AlertContext';
 import { useAuth } from '../contexts/AuthContext';
 import { AlertCard } from '../components/AlertCard';
 import { LoadingOverlay } from '../components/LoadingOverlay';
-import { Alert } from '../types/Alert';
 import { RISK_COLORS } from '../utils/riskColors';
+import { COLORS, FONTS, RADIUS } from '../utils/theme';
 
-const { width } = Dimensions.get('window');
+function formatLastUpdated(date: Date | null) {
+  if (!date) return 'Nunca';
+  const now = Date.now();
+  const diffMs = now - date.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 60) return `${diffSec}s atrás`;
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}min atrás`;
+  return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
 
 export default function DashboardScreen({ navigation }: any) {
-  const { alerts, isLoading, fetchAtivos } = useAlertContext();
+  const { alerts, sensors, isLoading, isRefreshing, lastUpdated, error, refresh } = useAlertContext();
   const { user } = useAuth();
-  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    fetchAtivos();
-  }, []);
+  const counts = useMemo(() =>
+    ([1, 2, 3, 4, 5] as const).map((nivel) => ({
+      nivel, count: alerts.filter((a) => a.nivel === nivel).length,
+    })), [alerts]);
 
-  async function onRefresh() {
-    setRefreshing(true);
-    await fetchAtivos();
-    setRefreshing(false);
-  }
+  const alertasCriticos = useMemo(() => alerts.filter((a) => a.nivel >= 4), [alerts]);
+  const sensoresOnline = sensors.filter((s) => s.status === 'ONLINE').length;
+  const sensoresOffline = sensors.filter((s) => s.status === 'OFFLINE').length;
 
-  function handleAlertPress(alert: Alert) {
-    navigation.navigate('AlertDetail', { alertId: alert.id });
-  }
-
-  // Contagem por nível
-  const counts = [1, 2, 3, 4, 5].map((nivel) => ({
-    nivel,
-    count: alerts.filter((a) => a.nivel === nivel).length,
-  }));
-
-  const alertasCriticos = alerts.filter((a) => a.nivel >= 4);
-
-  if (isLoading && alerts.length === 0) {
-    return <LoadingOverlay message="Buscando alertas ativos..." />;
-  }
+  if (isLoading && alerts.length === 0) return <LoadingOverlay message="Conectando ao servidor..." />;
 
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366F1" />
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={refresh}
+          tintColor={COLORS.primary}
+          colors={[COLORS.primary]}
+        />
       }
     >
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Olá, {user?.nome?.split(' ')[0] ?? 'Gestor'} 👋</Text>
-          <Text style={styles.headerSub}>
-            {alerts.length} {alerts.length === 1 ? 'alerta ativo' : 'alertas ativos'}
-          </Text>
+          <Text style={styles.greeting}>Olá, {user?.nome?.split(' ')[0] ?? 'Gestor'}</Text>
+          <View style={styles.alertCountRow}>
+            <Feather name="alert-circle" size={13} color={COLORS.textMuted} />
+            <Text style={styles.headerSub}>
+              {alerts.length} {alerts.length === 1 ? 'alerta ativo' : 'alertas ativos'}
+            </Text>
+          </View>
         </View>
         <View style={styles.satelliteTag}>
-          <Text style={styles.satelliteText}>🛰️ Sentinel-1</Text>
+          <MaterialCommunityIcons name="satellite-variant" size={14} color={COLORS.primaryLight} />
+          <Text style={styles.satelliteText}>Sentinel-1</Text>
         </View>
       </View>
 
-      {/* Cards de contagem por nível */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.countsRow}
-      >
+      {/* Última atualização */}
+      <View style={styles.statusBar}>
+        <View style={styles.statusLeft}>
+          <View style={[styles.statusDot, { backgroundColor: error ? COLORS.danger : COLORS.success }]} />
+          <Text style={styles.statusText}>
+            {error ? 'Offline — dados em cache' : 'Ao vivo'}
+          </Text>
+        </View>
+        <View style={styles.statusRight}>
+          <Feather name="refresh-cw" size={12} color={COLORS.textMuted} />
+          <Text style={styles.statusText}>Atualizado: {formatLastUpdated(lastUpdated)}</Text>
+        </View>
+      </View>
+
+      {/* Cards de resumo */}
+      <View style={styles.summaryRow}>
+        <View style={[styles.summaryCard, { borderColor: `${COLORS.danger}40` }]}>
+          <Feather name="alert-octagon" size={20} color={COLORS.danger} />
+          <Text style={[styles.summaryNumber, { color: COLORS.danger }]}>{alertasCriticos.length}</Text>
+          <Text style={styles.summaryLabel}>Críticos</Text>
+        </View>
+        <View style={[styles.summaryCard, { borderColor: `${COLORS.success}40` }]}>
+          <MaterialCommunityIcons name="broadcast" size={20} color={COLORS.success} />
+          <Text style={[styles.summaryNumber, { color: COLORS.success }]}>{sensoresOnline}</Text>
+          <Text style={styles.summaryLabel}>Sensores</Text>
+        </View>
+        <View style={[styles.summaryCard, { borderColor: `${COLORS.primary}40` }]}>
+          <Feather name="layers" size={20} color={COLORS.primary} />
+          <Text style={[styles.summaryNumber, { color: COLORS.primary }]}>{alerts.length}</Text>
+          <Text style={styles.summaryLabel}>Total</Text>
+        </View>
+      </View>
+
+      {/* Contadores por nível */}
+      <Text style={styles.sectionTitle}>Distribuição por Nível</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.countsRow}>
         {counts.map(({ nivel, count }) => (
-          <View
+          <TouchableOpacity
             key={nivel}
-            style={[styles.countCard, { borderColor: RISK_COLORS[nivel as 1 | 2 | 3 | 4 | 5] }]}
+            style={[styles.countCard, { borderColor: RISK_COLORS[nivel] }]}
+            onPress={() => navigation.navigate('Alertas')}
           >
-            <Text
-              style={[styles.countNumber, { color: RISK_COLORS[nivel as 1 | 2 | 3 | 4 | 5] }]}
-            >
-              {count}
-            </Text>
+            <Text style={[styles.countNumber, { color: RISK_COLORS[nivel] }]}>{count}</Text>
             <Text style={styles.countLabel}>Nível {nivel}</Text>
-          </View>
+          </TouchableOpacity>
         ))}
       </ScrollView>
+
+      {/* Erro */}
+      {error && (
+        <View style={styles.errorBanner}>
+          <Feather name="wifi-off" size={14} color={COLORS.warning} />
+          <Text style={styles.errorText}>Usando cache local. Puxe para atualizar.</Text>
+        </View>
+      )}
 
       {/* Alertas Críticos */}
       {alertasCriticos.length > 0 && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>🔴 Alertas Críticos</Text>
-            <Text style={styles.sectionCount}>{alertasCriticos.length}</Text>
+            <View style={styles.sectionTitleRow}>
+              <Feather name="alert-octagon" size={15} color={COLORS.danger} />
+              <Text style={styles.sectionTitleText}>Alertas Críticos</Text>
+            </View>
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>{alertasCriticos.length}</Text>
+            </View>
           </View>
           {alertasCriticos.map((alert) => (
-            <AlertCard key={alert.id} alert={alert} onPress={handleAlertPress} />
+            <AlertCard
+              key={alert.id} alert={alert}
+              onPress={(a) => navigation.navigate('AlertDetail', { alertId: a.id })}
+            />
           ))}
         </View>
       )}
@@ -106,106 +147,138 @@ export default function DashboardScreen({ navigation }: any) {
       {/* Todos os alertas */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>📋 Todos os Alertas</Text>
+          <View style={styles.sectionTitleRow}>
+            <Feather name="list" size={15} color={COLORS.textPrimary} />
+            <Text style={styles.sectionTitleText}>Alertas Recentes</Text>
+          </View>
           <TouchableOpacity onPress={() => navigation.navigate('Alertas')}>
             <Text style={styles.verTodos}>Ver todos</Text>
           </TouchableOpacity>
         </View>
-        {alerts.slice(0, 5).map((alert) => (
-          <AlertCard key={alert.id} alert={alert} onPress={handleAlertPress} />
-        ))}
+
+        {alerts.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Feather name="check-circle" size={40} color={COLORS.success} />
+            <Text style={styles.emptyTitle}>Nenhum alerta ativo</Text>
+            <Text style={styles.emptySubtitle}>O sistema está monitorando normalmente.</Text>
+          </View>
+        ) : (
+          alerts.slice(0, 5).map((alert) => (
+            <AlertCard
+              key={alert.id} alert={alert}
+              onPress={(a) => navigation.navigate('AlertDetail', { alertId: a.id })}
+            />
+          ))
+        )}
       </View>
+
+      {/* Resumo de sensores */}
+      {sensors.length > 0 && (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionTitleRow}>
+              <MaterialCommunityIcons name="broadcast" size={15} color={COLORS.info} />
+              <Text style={styles.sectionTitleText}>Sensores IoT</Text>
+            </View>
+            <TouchableOpacity onPress={() => navigation.navigate('Sensores')}>
+              <Text style={styles.verTodos}>Ver todos</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.sensorSummaryCard}>
+            <View style={styles.sensorStat}>
+              <View style={[styles.sensorStatDot, { backgroundColor: COLORS.success }]} />
+              <Text style={styles.sensorStatNum}>{sensoresOnline}</Text>
+              <Text style={styles.sensorStatLabel}>Online</Text>
+            </View>
+            <View style={styles.sensorSeparator} />
+            <View style={styles.sensorStat}>
+              <View style={[styles.sensorStatDot, { backgroundColor: COLORS.danger }]} />
+              <Text style={styles.sensorStatNum}>{sensoresOffline}</Text>
+              <Text style={styles.sensorStatLabel}>Offline</Text>
+            </View>
+            <View style={styles.sensorSeparator} />
+            <View style={styles.sensorStat}>
+              <View style={[styles.sensorStatDot, { backgroundColor: COLORS.warning }]} />
+              <Text style={styles.sensorStatNum}>{sensors.filter(s => s.status === 'MANUTENCAO').length}</Text>
+              <Text style={styles.sensorStatLabel}>Manutenção</Text>
+            </View>
+          </View>
+        </View>
+      )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0B0F1A',
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 40,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  greeting: {
-    color: '#F1F5F9',
-    fontSize: 22,
-    fontWeight: '700',
-  },
-  headerSub: {
-    color: '#64748B',
-    fontSize: 13,
-    marginTop: 2,
-  },
+  container: { flex: 1, backgroundColor: COLORS.bgPrimary },
+  content: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  greeting: { color: COLORS.textPrimary, fontSize: 22, fontFamily: FONTS.extraBold },
+  alertCountRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 3 },
+  headerSub: { color: COLORS.textMuted, fontSize: 12, fontFamily: FONTS.regular },
   satelliteTag: {
-    backgroundColor: '#1A1F2E',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: '#6366F1',
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: COLORS.bgCard, borderRadius: RADIUS.full,
+    paddingHorizontal: 12, paddingVertical: 6,
+    borderWidth: 1, borderColor: COLORS.primary,
   },
-  satelliteText: {
-    color: '#A5B4FC',
-    fontSize: 12,
-    fontWeight: '600',
+  satelliteText: { color: COLORS.primaryLight, fontSize: 12, fontFamily: FONTS.semiBold },
+  statusBar: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    backgroundColor: COLORS.bgCard, borderRadius: RADIUS.md, paddingHorizontal: 14,
+    paddingVertical: 8, marginBottom: 20, borderWidth: 1, borderColor: COLORS.border,
   },
-  countsRow: {
-    gap: 12,
-    paddingBottom: 4,
-    marginBottom: 24,
+  statusLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  statusRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  statusDot: { width: 7, height: 7, borderRadius: 4 },
+  statusText: { color: COLORS.textMuted, fontSize: 11, fontFamily: FONTS.medium },
+  summaryRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
+  summaryCard: {
+    flex: 1, backgroundColor: COLORS.bgCard, borderRadius: RADIUS.lg,
+    borderWidth: 1, padding: 14, alignItems: 'center', gap: 6,
   },
-  countCard: {
-    backgroundColor: '#1A1F2E',
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 16,
-    alignItems: 'center',
-    minWidth: 80,
-  },
-  countNumber: {
-    fontSize: 28,
-    fontWeight: '800',
-  },
-  countLabel: {
-    color: '#64748B',
-    fontSize: 11,
-    marginTop: 4,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
+  summaryNumber: { fontSize: 26, fontFamily: FONTS.extraBold },
+  summaryLabel: { color: COLORS.textMuted, fontSize: 11, fontFamily: FONTS.regular },
   sectionTitle: {
-    color: '#F1F5F9',
-    fontSize: 16,
-    fontWeight: '700',
+    color: COLORS.textSecondary, fontSize: 11, fontFamily: FONTS.semiBold,
+    letterSpacing: 0.8, marginBottom: 10,
   },
-  sectionCount: {
-    backgroundColor: '#EF4444',
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: '700',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
+  countsRow: { gap: 10, paddingBottom: 4, marginBottom: 24 },
+  countCard: {
+    backgroundColor: COLORS.bgCard, borderRadius: RADIUS.lg,
+    borderWidth: 1, padding: 14, alignItems: 'center', minWidth: 72,
   },
-  verTodos: {
-    color: '#6366F1',
-    fontSize: 13,
-    fontWeight: '600',
+  countNumber: { fontSize: 26, fontFamily: FONTS.extraBold },
+  countLabel: { color: COLORS.textMuted, fontSize: 11, fontFamily: FONTS.regular, marginTop: 4 },
+  errorBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: `${COLORS.warning}15`, borderRadius: RADIUS.md,
+    paddingHorizontal: 14, paddingVertical: 10, marginBottom: 16,
+    borderWidth: 1, borderColor: `${COLORS.warning}30`,
   },
+  errorText: { color: COLORS.warning, fontSize: 12, fontFamily: FONTS.medium, flex: 1 },
+  section: { marginBottom: 24 },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sectionTitleText: { color: COLORS.textPrimary, fontSize: 15, fontFamily: FONTS.bold },
+  countBadge: { backgroundColor: COLORS.danger, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 },
+  countBadgeText: { color: '#FFF', fontSize: 11, fontFamily: FONTS.bold },
+  verTodos: { color: COLORS.primary, fontSize: 13, fontFamily: FONTS.semiBold },
+  emptyState: {
+    alignItems: 'center', gap: 10, paddingVertical: 40,
+    backgroundColor: COLORS.bgCard, borderRadius: RADIUS.lg,
+    borderWidth: 1, borderColor: COLORS.border,
+  },
+  emptyTitle: { color: COLORS.textPrimary, fontSize: 16, fontFamily: FONTS.semiBold },
+  emptySubtitle: { color: COLORS.textMuted, fontSize: 13, fontFamily: FONTS.regular },
+  sensorSummaryCard: {
+    backgroundColor: COLORS.bgCard, borderRadius: RADIUS.lg,
+    borderWidth: 1, borderColor: COLORS.border,
+    flexDirection: 'row', alignItems: 'center', paddingVertical: 18,
+  },
+  sensorStat: { flex: 1, alignItems: 'center', gap: 6 },
+  sensorStatDot: { width: 8, height: 8, borderRadius: 4 },
+  sensorStatNum: { color: COLORS.textPrimary, fontSize: 22, fontFamily: FONTS.bold },
+  sensorStatLabel: { color: COLORS.textMuted, fontSize: 11, fontFamily: FONTS.regular },
+  sensorSeparator: { width: 1, height: 40, backgroundColor: COLORS.border },
 });

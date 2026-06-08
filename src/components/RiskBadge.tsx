@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { RiskLevel } from '../types/Alert';
-import { RISK_COLORS, RISK_LABELS, RISK_BG_COLORS } from '../utils/riskColors';
+import { RISK_COLORS, RISK_LABELS } from '../utils/riskColors';
+import { FONTS, RADIUS } from '../utils/theme';
 
 interface RiskBadgeProps {
   level: RiskLevel;
@@ -10,31 +11,28 @@ interface RiskBadgeProps {
 
 export function RiskBadge({ level, size = 'md' }: RiskBadgeProps) {
   const color = RISK_COLORS[level];
-  const bgColor = RISK_BG_COLORS[level];
   const label = RISK_LABELS[level];
 
-  const sizeStyles = {
-    sm: { paddingHorizontal: 8, paddingVertical: 3, fontSize: 10, borderRadius: 6 },
-    md: { paddingHorizontal: 12, paddingVertical: 5, fontSize: 12, borderRadius: 8 },
-    lg: { paddingHorizontal: 16, paddingVertical: 8, fontSize: 14, borderRadius: 10 },
+  const sizeMap = {
+    sm: { px: 8, py: 3, fontSize: 10, dot: 6 },
+    md: { px: 12, py: 5, fontSize: 12, dot: 7 },
+    lg: { px: 16, py: 8, fontSize: 14, dot: 8 },
   };
-
-  const s = sizeStyles[size];
+  const s = sizeMap[size];
 
   return (
     <View
       style={[
         styles.badge,
         {
-          backgroundColor: bgColor,
+          backgroundColor: `${color}18`,
           borderColor: color,
-          paddingHorizontal: s.paddingHorizontal,
-          paddingVertical: s.paddingVertical,
-          borderRadius: s.borderRadius,
+          paddingHorizontal: s.px,
+          paddingVertical: s.py,
         },
       ]}
     >
-      <Text style={[styles.dot, { color }]}>●</Text>
+      <View style={[styles.dot, { backgroundColor: color, width: s.dot, height: s.dot, borderRadius: s.dot / 2 }]} />
       <Text style={[styles.label, { color, fontSize: s.fontSize }]}>
         Nível {level} — {label}
       </Text>
@@ -46,15 +44,14 @@ const styles = StyleSheet.create({
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 6,
     borderWidth: 1,
+    borderRadius: RADIUS.sm,
     alignSelf: 'flex-start',
   },
-  dot: {
-    fontSize: 8,
-  },
+  dot: {},
   label: {
-    fontWeight: '700',
+    fontFamily: FONTS.semiBold,
     letterSpacing: 0.3,
   },
 });

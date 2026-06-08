@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
+import { COLORS, FONTS, RADIUS } from '../utils/theme';
 
 interface LoadingOverlayProps {
   message?: string;
@@ -9,7 +10,7 @@ export function LoadingOverlay({ message = 'Carregando...' }: LoadingOverlayProp
   return (
     <View style={styles.overlay}>
       <View style={styles.card}>
-        <ActivityIndicator size="large" color="#6366F1" />
+        <ActivityIndicator size="large" color={COLORS.primary} />
         <Text style={styles.text}>{message}</Text>
       </View>
     </View>
@@ -19,13 +20,13 @@ export function LoadingOverlay({ message = 'Carregando...' }: LoadingOverlayProp
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: '#0B0F1A',
+    backgroundColor: COLORS.bgPrimary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   card: {
-    backgroundColor: '#1A1F2E',
-    borderRadius: 16,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: RADIUS.lg,
     padding: 32,
     alignItems: 'center',
     gap: 16,
@@ -36,8 +37,9 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   text: {
-    color: '#94A3B8',
+    color: COLORS.textSecondary,
     fontSize: 14,
+    fontFamily: FONTS.medium,
     letterSpacing: 0.3,
   },
 });

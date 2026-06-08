@@ -11,7 +11,9 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { COLORS, FONTS, RADIUS } from '../utils/theme';
 
 interface FormData {
   nome: string;
@@ -21,7 +23,6 @@ interface FormData {
   senha: string;
   confirmarSenha: string;
 }
-
 interface FormErrors {
   nome?: string;
   email?: string;
@@ -33,12 +34,7 @@ interface FormErrors {
 
 export default function RegisterScreen({ navigation }: any) {
   const [form, setForm] = useState<FormData>({
-    nome: '',
-    email: '',
-    municipio: '',
-    cargo: '',
-    senha: '',
-    confirmarSenha: '',
+    nome: '', email: '', municipio: '', cargo: '', senha: '', confirmarSenha: '',
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [showSenha, setShowSenha] = useState(false);
@@ -47,66 +43,31 @@ export default function RegisterScreen({ navigation }: any) {
 
   function updateField(field: keyof FormData, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
-    // Limpa o erro do campo ao digitar
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   }
 
   function validate(): boolean {
-    const newErrors: FormErrors = {};
-
-    if (!form.nome.trim() || form.nome.trim().length < 3) {
-      newErrors.nome = 'Nome deve ter ao menos 3 caracteres';
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!form.email.trim() || !emailRegex.test(form.email.trim())) {
-      newErrors.email = 'E-mail inválido';
-    }
-
-    if (!form.municipio.trim()) {
-      newErrors.municipio = 'Informe o município';
-    }
-
-    if (!form.cargo.trim()) {
-      newErrors.cargo = 'Informe o cargo';
-    }
-
-    if (form.senha.length < 6) {
-      newErrors.senha = 'Senha deve ter ao menos 6 caracteres';
-    }
-
-    if (form.senha !== form.confirmarSenha) {
-      newErrors.confirmarSenha = 'As senhas não coincidem';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const e: FormErrors = {};
+    if (!form.nome.trim() || form.nome.trim().length < 3) e.nome = 'Nome deve ter ao menos 3 caracteres';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) e.email = 'E-mail inválido';
+    if (!form.municipio.trim()) e.municipio = 'Informe o município';
+    if (!form.cargo.trim()) e.cargo = 'Informe o cargo';
+    if (form.senha.length < 6) e.senha = 'Senha deve ter ao menos 6 caracteres';
+    if (form.senha !== form.confirmarSenha) e.confirmarSenha = 'As senhas não coincidem';
+    setErrors(e);
+    return Object.keys(e).length === 0;
   }
 
   async function handleRegister() {
     if (!validate()) return;
-
     try {
       setIsLoading(true);
-
-      // Verifica se e-mail já está cadastrado
       const existingRaw = await AsyncStorage.getItem('@orbit_users');
-      const existingUsers: Omit<FormData, 'confirmarSenha'>[] = existingRaw
-        ? JSON.parse(existingRaw)
-        : [];
-
-      const emailJaCadastrado = existingUsers.some(
-        (u) => u.email.toLowerCase() === form.email.trim().toLowerCase()
-      );
-
-      if (emailJaCadastrado) {
+      const existingUsers: any[] = existingRaw ? JSON.parse(existingRaw) : [];
+      if (existingUsers.some((u) => u.email.toLowerCase() === form.email.trim().toLowerCase())) {
         setErrors({ email: 'Este e-mail já está cadastrado' });
         return;
       }
-
-      // Salva novo usuário (sem o campo confirmarSenha)
       const novoUsuario = {
         nome: form.nome.trim(),
         email: form.email.trim().toLowerCase(),
@@ -115,18 +76,14 @@ export default function RegisterScreen({ navigation }: any) {
         senha: form.senha,
         criadoEm: new Date().toISOString(),
       };
-
-      const updatedUsers = [...existingUsers, novoUsuario];
-      await AsyncStorage.setItem('@orbit_users', JSON.stringify(updatedUsers));
-
+      await AsyncStorage.setItem('@orbit_users', JSON.stringify([...existingUsers, novoUsuario]));
       Alert.alert(
-        '✅ Cadastro realizado!',
-        `Bem-vindo(a), ${novoUsuario.nome}! Faça login para acessar a plataforma.`,
+        'Cadastro realizado!',
+        `Bem-vindo(a), ${novoUsuario.nome}! Faça login para acessar.`,
         [{ text: 'Ir para Login', onPress: () => navigation.navigate('Login') }]
       );
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível realizar o cadastro. Tente novamente.');
-      console.error('Erro ao cadastrar:', error);
+    } catch {
+      Alert.alert('Erro', 'Não foi possível realizar o cadastro.');
     } finally {
       setIsLoading(false);
     }
@@ -145,300 +102,140 @@ export default function RegisterScreen({ navigation }: any) {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Text style={styles.backBtnText}>← Voltar</Text>
+            <Feather name="arrow-left" size={18} color={COLORS.primary} />
+            <Text style={styles.backBtnText}>Voltar</Text>
           </TouchableOpacity>
-          <Text style={styles.icon}>🛰️</Text>
-          <Text style={styles.brand}>Criar conta</Text>
+          <Text style={styles.title}>Criar conta</Text>
           <Text style={styles.subtitle}>Acesso para gestores municipais</Text>
         </View>
 
-        {/* Card de Cadastro */}
         <View style={styles.card}>
-          <InputField
-            label="Nome completo"
-            icon="👤"
-            placeholder="Ex: João da Silva"
-            value={form.nome}
-            onChangeText={(v) => updateField('nome', v)}
-            error={errors.nome}
-          />
-
-          <InputField
-            label="E-mail institucional"
-            icon="✉️"
-            placeholder="seu@municipio.gov.br"
-            value={form.email}
-            onChangeText={(v) => updateField('email', v)}
-            error={errors.email}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-
-          <InputField
-            label="Município"
-            icon="📍"
-            placeholder="Ex: São Paulo, SP"
-            value={form.municipio}
-            onChangeText={(v) => updateField('municipio', v)}
-            error={errors.municipio}
-          />
-
-          <InputField
-            label="Cargo / Função"
-            icon="🏛️"
-            placeholder="Ex: Secretário de Defesa Civil"
-            value={form.cargo}
-            onChangeText={(v) => updateField('cargo', v)}
-            error={errors.cargo}
-          />
+          <Field label="NOME COMPLETO" icon="user" placeholder="Ex: João da Silva"
+            value={form.nome} onChangeText={(v) => updateField('nome', v)} error={errors.nome} />
+          <Field label="E-MAIL INSTITUCIONAL" icon="mail" placeholder="seu@municipio.gov.br"
+            value={form.email} onChangeText={(v) => updateField('email', v)} error={errors.email}
+            keyboardType="email-address" autoCapitalize="none" />
+          <Field label="MUNICÍPIO" icon="map-pin" placeholder="Ex: São Paulo, SP"
+            value={form.municipio} onChangeText={(v) => updateField('municipio', v)} error={errors.municipio} />
+          <Field label="CARGO / FUNÇÃO" icon="briefcase" placeholder="Ex: Secretário de Defesa Civil"
+            value={form.cargo} onChangeText={(v) => updateField('cargo', v)} error={errors.cargo} />
 
           {/* Senha */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Senha</Text>
-            <View style={[styles.inputWrapper, errors.senha ? styles.inputError : null]}>
-              <Text style={styles.inputIcon}>🔒</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Mínimo 6 caracteres"
-                placeholderTextColor="#334155"
-                value={form.senha}
-                onChangeText={(v) => updateField('senha', v)}
-                secureTextEntry={!showSenha}
-              />
-              <TouchableOpacity onPress={() => setShowSenha(!showSenha)}>
-                <Text style={styles.inputIcon}>{showSenha ? '🙈' : '👁️'}</Text>
-              </TouchableOpacity>
-            </View>
-            {errors.senha && <Text style={styles.errorText}>{errors.senha}</Text>}
-          </View>
+          <PasswordField
+            label="SENHA" placeholder="Mínimo 6 caracteres"
+            value={form.senha} onChangeText={(v) => updateField('senha', v)}
+            show={showSenha} onToggle={() => setShowSenha(!showSenha)} error={errors.senha}
+          />
 
           {/* Confirmar Senha */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Confirmar senha</Text>
-            <View style={[styles.inputWrapper, errors.confirmarSenha ? styles.inputError : null]}>
-              <Text style={styles.inputIcon}>🔒</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Repita a senha"
-                placeholderTextColor="#334155"
-                value={form.confirmarSenha}
-                onChangeText={(v) => updateField('confirmarSenha', v)}
-                secureTextEntry={!showConfirmar}
-              />
-              <TouchableOpacity onPress={() => setShowConfirmar(!showConfirmar)}>
-                <Text style={styles.inputIcon}>{showConfirmar ? '🙈' : '👁️'}</Text>
-              </TouchableOpacity>
-            </View>
-            {errors.confirmarSenha && (
-              <Text style={styles.errorText}>{errors.confirmarSenha}</Text>
-            )}
-          </View>
+          <PasswordField
+            label="CONFIRMAR SENHA" placeholder="Repita a senha"
+            value={form.confirmarSenha} onChangeText={(v) => updateField('confirmarSenha', v)}
+            show={showConfirmar} onToggle={() => setShowConfirmar(!showConfirmar)} error={errors.confirmarSenha}
+          />
 
-          {/* Botão Cadastrar */}
           <TouchableOpacity
             style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleRegister}
-            disabled={isLoading}
-            activeOpacity={0.85}
+            onPress={handleRegister} disabled={isLoading} activeOpacity={0.85}
           >
-            {isLoading ? (
-              <ActivityIndicator color="#FFF" size="small" />
-            ) : (
+            {isLoading ? <ActivityIndicator color="#FFF" size="small" /> : (
               <Text style={styles.buttonText}>Criar conta</Text>
             )}
           </TouchableOpacity>
 
-          {/* Link Login */}
-          <TouchableOpacity
-            style={styles.loginLink}
-            onPress={() => navigation.navigate('Login')}
-          >
+          <TouchableOpacity style={styles.loginLink} onPress={() => navigation.navigate('Login')}>
             <Text style={styles.loginLinkText}>
-              Já tem conta?{' '}
-              <Text style={styles.loginLinkHighlight}>Fazer login</Text>
+              Já tem conta? <Text style={styles.loginHighlight}>Fazer login</Text>
             </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Footer */}
         <Text style={styles.footer}>OrbitAlert · FIAP Global Solution 2026</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-// Componente reutilizável de campo
-interface InputFieldProps {
-  label: string;
-  icon: string;
-  placeholder: string;
-  value: string;
-  onChangeText: (v: string) => void;
-  error?: string;
-  keyboardType?: any;
-  autoCapitalize?: any;
-}
-
-function InputField({
-  label,
-  icon,
-  placeholder,
-  value,
-  onChangeText,
-  error,
-  keyboardType = 'default',
-  autoCapitalize = 'words',
-}: InputFieldProps) {
+function Field({ label, icon, placeholder, value, onChangeText, error, keyboardType = 'default', autoCapitalize = 'words' }: any) {
   return (
     <View style={styles.inputGroup}>
       <Text style={styles.inputLabel}>{label}</Text>
-      <View style={[styles.inputWrapper, error ? styles.inputError : null]}>
-        <Text style={styles.inputIcon}>{icon}</Text>
+      <View style={[styles.inputWrapper, error && styles.inputError]}>
+        <Feather name={icon} size={15} color={error ? COLORS.danger : COLORS.textMuted} />
         <TextInput
-          style={styles.input}
-          placeholder={placeholder}
-          placeholderTextColor="#334155"
-          value={value}
-          onChangeText={onChangeText}
-          keyboardType={keyboardType}
-          autoCapitalize={autoCapitalize}
-          autoCorrect={false}
+          style={styles.input} placeholder={placeholder}
+          placeholderTextColor={COLORS.textDimmed} value={value}
+          onChangeText={onChangeText} keyboardType={keyboardType}
+          autoCapitalize={autoCapitalize} autoCorrect={false}
         />
       </View>
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error && (
+        <View style={styles.errorRow}>
+          <Feather name="alert-circle" size={11} color={COLORS.danger} />
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+function PasswordField({ label, placeholder, value, onChangeText, show, onToggle, error }: any) {
+  return (
+    <View style={styles.inputGroup}>
+      <Text style={styles.inputLabel}>{label}</Text>
+      <View style={[styles.inputWrapper, error && styles.inputError]}>
+        <Feather name="lock" size={15} color={error ? COLORS.danger : COLORS.textMuted} />
+        <TextInput
+          style={styles.input} placeholder={placeholder}
+          placeholderTextColor={COLORS.textDimmed} value={value}
+          onChangeText={onChangeText} secureTextEntry={!show}
+        />
+        <TouchableOpacity onPress={onToggle}>
+          <Feather name={show ? 'eye-off' : 'eye'} size={15} color={COLORS.textMuted} />
+        </TouchableOpacity>
+      </View>
+      {error && (
+        <View style={styles.errorRow}>
+          <Feather name="alert-circle" size={11} color={COLORS.danger} />
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0B0F1A',
-  },
-  scroll: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 48,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 28,
-  },
-  backBtn: {
-    alignSelf: 'flex-start',
-    marginBottom: 20,
-    paddingVertical: 4,
-  },
-  backBtnText: {
-    color: '#6366F1',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  icon: {
-    fontSize: 44,
-    marginBottom: 10,
-  },
-  brand: {
-    color: '#F1F5F9',
-    fontSize: 28,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  subtitle: {
-    color: '#64748B',
-    fontSize: 13,
-    marginTop: 6,
-    letterSpacing: 0.3,
-  },
+  container: { flex: 1, backgroundColor: COLORS.bgPrimary },
+  scroll: { flexGrow: 1, paddingHorizontal: 24, paddingVertical: 48 },
+  header: { marginBottom: 28 },
+  backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 24, alignSelf: 'flex-start' },
+  backBtnText: { color: COLORS.primary, fontSize: 14, fontFamily: FONTS.semiBold },
+  title: { color: COLORS.textPrimary, fontSize: 26, fontFamily: FONTS.extraBold, marginBottom: 4 },
+  subtitle: { color: COLORS.textMuted, fontSize: 13, fontFamily: FONTS.regular },
   card: {
-    backgroundColor: '#1A1F2E',
-    borderRadius: 20,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: '#1E293B',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 10,
+    backgroundColor: COLORS.bgCard, borderRadius: RADIUS.xl, padding: 24,
+    borderWidth: 1, borderColor: COLORS.border,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 10,
   },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  inputLabel: {
-    color: '#94A3B8',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.6,
-    marginBottom: 7,
-    textTransform: 'uppercase',
-  },
+  inputGroup: { marginBottom: 16 },
+  inputLabel: { color: COLORS.textSecondary, fontSize: 10, fontFamily: FONTS.semiBold, letterSpacing: 0.8, marginBottom: 7 },
   inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0F1420',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#1E293B',
-    paddingHorizontal: 14,
-    gap: 10,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.bgTertiary,
+    borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border, paddingHorizontal: 14, gap: 12,
   },
-  inputError: {
-    borderColor: '#EF4444',
-  },
-  inputIcon: {
-    fontSize: 16,
-  },
-  input: {
-    flex: 1,
-    color: '#F1F5F9',
-    fontSize: 14,
-    paddingVertical: 13,
-  },
-  errorText: {
-    color: '#EF4444',
-    fontSize: 11,
-    marginTop: 5,
-    marginLeft: 4,
-  },
+  inputError: { borderColor: COLORS.danger },
+  input: { flex: 1, color: COLORS.textPrimary, fontSize: 14, fontFamily: FONTS.regular, paddingVertical: 13 },
+  errorRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5, marginLeft: 2 },
+  errorText: { color: COLORS.danger, fontSize: 11, fontFamily: FONTS.regular },
   button: {
-    backgroundColor: '#6366F1',
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 8,
-    shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
+    backgroundColor: COLORS.primary, borderRadius: RADIUS.md, paddingVertical: 16,
+    alignItems: 'center', marginTop: 8,
+    shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 12, elevation: 8,
   },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-  loginLink: {
-    alignItems: 'center',
-    marginTop: 20,
-    paddingVertical: 6,
-  },
-  loginLinkText: {
-    color: '#64748B',
-    fontSize: 13,
-  },
-  loginLinkHighlight: {
-    color: '#6366F1',
-    fontWeight: '700',
-  },
-  footer: {
-    color: '#1E293B',
-    fontSize: 11,
-    textAlign: 'center',
-    marginTop: 28,
-  },
+  buttonDisabled: { opacity: 0.6 },
+  buttonText: { color: '#FFF', fontSize: 15, fontFamily: FONTS.semiBold, letterSpacing: 0.3 },
+  loginLink: { alignItems: 'center', marginTop: 20, paddingVertical: 6 },
+  loginLinkText: { color: COLORS.textMuted, fontSize: 13, fontFamily: FONTS.regular },
+  loginHighlight: { color: COLORS.primary, fontFamily: FONTS.semiBold },
+  footer: { color: COLORS.border, fontSize: 11, fontFamily: FONTS.regular, textAlign: 'center', marginTop: 28 },
 });

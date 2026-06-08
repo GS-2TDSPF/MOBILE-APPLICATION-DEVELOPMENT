@@ -1,4 +1,5 @@
 // Endpoints da API Spring Boot
+// Lê do .env (EXPO_PUBLIC_API_BASE_URL) ou usa fallback
 const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://java-advanced-2-7tix.onrender.com';
 
 export const API_BASE_URL = BASE_URL;

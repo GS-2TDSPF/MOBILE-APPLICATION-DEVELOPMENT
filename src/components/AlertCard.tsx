@@ -1,28 +1,33 @@
 import React from 'react';
-import {
-  TouchableOpacity,
-  View,
-  Text,
-  StyleSheet,
-} from 'react-native';
+import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Alert } from '../types/Alert';
 import { RiskBadge } from './RiskBadge';
 import { RISK_COLORS } from '../utils/riskColors';
 import { timeAgo } from '../utils/dateFormatter';
+import { COLORS, FONTS, RADIUS } from '../utils/theme';
 
 interface AlertCardProps {
   alert: Alert;
   onPress?: (alert: Alert) => void;
 }
 
+const TIPO_ICONS: Record<string, { lib: 'feather' | 'mci'; name: string }> = {
+  DESLIZAMENTO: { lib: 'mci', name: 'landslide' },
+  ENCHENTE: { lib: 'mci', name: 'waves' },
+  SECA: { lib: 'mci', name: 'weather-sunny-alert' },
+  OUTROS: { lib: 'feather', name: 'alert-triangle' },
+};
+
 export function AlertCard({ alert, onPress }: AlertCardProps) {
   const borderColor = RISK_COLORS[alert.nivel];
+  const iconDef = TIPO_ICONS[alert.tipoDesastre] ?? TIPO_ICONS.OUTROS;
 
-  const tipoIcon: Record<string, string> = {
-    DESLIZAMENTO: '🏔️',
-    ENCHENTE: '🌊',
-    SECA: '🌵',
-    OUTROS: '⚠️',
+  const renderIcon = () => {
+    if (iconDef.lib === 'mci') {
+      return <MaterialCommunityIcons name={iconDef.name as any} size={28} color={borderColor} />;
+    }
+    return <Feather name={iconDef.name as any} size={24} color={borderColor} />;
   };
 
   return (
@@ -32,27 +37,27 @@ export function AlertCard({ alert, onPress }: AlertCardProps) {
       activeOpacity={0.85}
     >
       <View style={styles.header}>
-        <Text style={styles.icon}>{tipoIcon[alert.tipoDesastre] ?? '⚠️'}</Text>
+        <View style={[styles.iconBox, { backgroundColor: `${borderColor}15` }]}>
+          {renderIcon()}
+        </View>
         <View style={styles.headerText}>
-          <Text style={styles.titulo} numberOfLines={1}>
-            {alert.titulo}
-          </Text>
-          <Text style={styles.municipio}>
-            {alert.municipio}, {alert.estado}
-          </Text>
+          <Text style={styles.titulo} numberOfLines={1}>{alert.titulo}</Text>
+          <View style={styles.locationRow}>
+            <Feather name="map-pin" size={11} color={COLORS.textMuted} />
+            <Text style={styles.municipio}>{alert.municipio}, {alert.estado}</Text>
+          </View>
         </View>
-        <View style={styles.statusContainer}>
-          {alert.ativo && <View style={styles.activeDot} />}
-        </View>
+        {alert.ativo && <View style={styles.activeDot} />}
       </View>
 
-      <Text style={styles.descricao} numberOfLines={2}>
-        {alert.descricao}
-      </Text>
+      <Text style={styles.descricao} numberOfLines={2}>{alert.descricao}</Text>
 
       <View style={styles.footer}>
         <RiskBadge level={alert.nivel} size="sm" />
-        <Text style={styles.tempo}>{timeAgo(alert.dataHora)}</Text>
+        <View style={styles.timeRow}>
+          <Feather name="clock" size={11} color={COLORS.textMuted} />
+          <Text style={styles.tempo}>{timeAgo(alert.dataHora)}</Text>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -60,8 +65,8 @@ export function AlertCard({ alert, onPress }: AlertCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#1A1F2E',
-    borderRadius: 14,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: RADIUS.lg,
     borderLeftWidth: 4,
     padding: 16,
     marginBottom: 12,
@@ -71,52 +76,21 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    gap: 10,
-  },
-  icon: {
-    fontSize: 26,
-  },
-  headerText: {
-    flex: 1,
-  },
-  titulo: {
-    color: '#F1F5F9',
-    fontSize: 15,
-    fontWeight: '700',
-    letterSpacing: 0.2,
-  },
-  municipio: {
-    color: '#94A3B8',
-    fontSize: 12,
-    marginTop: 2,
-  },
-  statusContainer: {
+  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 12 },
+  iconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  activeDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#22C55E',
-  },
-  descricao: {
-    color: '#CBD5E1',
-    fontSize: 13,
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  tempo: {
-    color: '#64748B',
-    fontSize: 11,
-  },
+  headerText: { flex: 1 },
+  titulo: { color: COLORS.textPrimary, fontSize: 14, fontFamily: FONTS.semiBold },
+  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
+  municipio: { color: COLORS.textMuted, fontSize: 12, fontFamily: FONTS.regular },
+  activeDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.success },
+  descricao: { color: COLORS.textSecondary, fontSize: 13, fontFamily: FONTS.regular, lineHeight: 20, marginBottom: 12 },
+  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  timeRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  tempo: { color: COLORS.textMuted, fontSize: 11, fontFamily: FONTS.regular },
 });

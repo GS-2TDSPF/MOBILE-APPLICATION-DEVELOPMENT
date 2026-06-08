@@ -5,9 +5,11 @@ import {
   StyleSheet,
   Animated,
   Dimensions,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
+import { COLORS, FONTS } from '../utils/theme';
 
 const { width } = Dimensions.get('window');
 
@@ -22,46 +24,23 @@ export default function SplashScreen() {
   const ringOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Animação de entrada
     Animated.sequence([
       Animated.parallel([
-        Animated.spring(logoScale, {
-          toValue: 1,
-          tension: 60,
-          friction: 7,
-          useNativeDriver: true,
-        }),
-        Animated.timing(logoOpacity, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
+        Animated.spring(logoScale, { toValue: 1, tension: 60, friction: 7, useNativeDriver: true }),
+        Animated.timing(logoOpacity, { toValue: 1, duration: 600, useNativeDriver: true }),
       ]),
       Animated.parallel([
-        Animated.timing(ringScale, {
-          toValue: 1.8,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.timing(ringOpacity, {
-          toValue: 0.3,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-        Animated.timing(textOpacity, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
+        Animated.timing(ringScale, { toValue: 1.8, duration: 800, useNativeDriver: true }),
+        Animated.timing(ringOpacity, { toValue: 0.25, duration: 400, useNativeDriver: true }),
+        Animated.timing(textOpacity, { toValue: 1, duration: 600, useNativeDriver: true }),
       ]),
     ]).start();
 
-    // Navegar após 2.5s
     const timer = setTimeout(() => {
       if (!isLoading) {
         navigation.replace(isAuthenticated ? 'Main' : 'Auth');
       }
-    }, 2500);
+    }, 2600);
 
     return () => clearTimeout(timer);
   }, [isLoading, isAuthenticated]);
@@ -70,37 +49,24 @@ export default function SplashScreen() {
     <View style={styles.container}>
       {/* Anel de efeito */}
       <Animated.View
-        style={[
-          styles.ring,
-          {
-            opacity: ringOpacity,
-            transform: [{ scale: ringScale }],
-          },
-        ]}
+        style={[styles.ring, { opacity: ringOpacity, transform: [{ scale: ringScale }] }]}
       />
 
-      {/* Logo + ícone */}
-      <Animated.View
-        style={[
-          styles.logoContainer,
-          {
-            opacity: logoOpacity,
-            transform: [{ scale: logoScale }],
-          },
-        ]}
-      >
-        <Text style={styles.satelliteIcon}>🛰️</Text>
+      {/* Logo */}
+      <Animated.View style={[styles.logoContainer, { opacity: logoOpacity, transform: [{ scale: logoScale }] }]}>
+        <Image
+          source={require('../../assets/images/logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
       </Animated.View>
 
-      {/* Textos */}
+      {/* Tagline */}
       <Animated.View style={[styles.textContainer, { opacity: textOpacity }]}>
-        <Text style={styles.brand}>OrbitAlert</Text>
         <Text style={styles.tagline}>Monitoramento via satélite em tempo real</Text>
-      </Animated.View>
-
-      {/* Footer */}
-      <Animated.View style={[styles.footer, { opacity: textOpacity }]}>
-        <Text style={styles.footerText}>Powered by ESA Copernicus · Sentinel-1</Text>
+        <View style={styles.pill}>
+          <Text style={styles.pillText}>Powered by ESA Copernicus · Sentinel-1</Text>
+        </View>
       </Animated.View>
     </View>
   );
@@ -109,61 +75,53 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B0F1A',
+    backgroundColor: COLORS.bgPrimary,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 32,
   },
   ring: {
     position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    borderWidth: 2,
-    borderColor: '#6366F1',
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary,
   },
   logoContainer: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    backgroundColor: '#1A1F2E',
+    width: 260,
+    height: 100,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#6366F1',
-    shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 20,
-    elevation: 20,
-    marginBottom: 28,
   },
-  satelliteIcon: {
-    fontSize: 52,
+  logo: {
+    width: '100%',
+    height: '100%',
   },
   textContainer: {
     alignItems: 'center',
-    gap: 8,
-  },
-  brand: {
-    color: '#F1F5F9',
-    fontSize: 36,
-    fontWeight: '800',
-    letterSpacing: 1,
+    gap: 12,
   },
   tagline: {
-    color: '#64748B',
+    color: COLORS.textMuted,
     fontSize: 13,
-    letterSpacing: 0.5,
+    fontFamily: FONTS.medium,
+    letterSpacing: 0.4,
     textAlign: 'center',
     maxWidth: width * 0.65,
   },
-  footer: {
-    position: 'absolute',
-    bottom: 40,
+  pill: {
+    backgroundColor: COLORS.bgSecondary,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  footerText: {
-    color: '#334155',
-    fontSize: 11,
+  pillText: {
+    color: COLORS.textDimmed,
+    fontSize: 10,
+    fontFamily: FONTS.medium,
     letterSpacing: 0.3,
   },
 });

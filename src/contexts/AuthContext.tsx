@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '../types/User';
 import { authService } from '../services/authService';
 
@@ -38,9 +39,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function login(email: string, senha: string) {
-    const response = await authService.login({ email, senha });
-    setUser(response.user);
-    setToken(response.token);
+    try {
+      const response = await authService.login({ email, senha });
+      setUser(response.user);
+      setToken(response.token);
+    } catch (error) {
+      // Fallback para usuários cadastrados localmente (offline/sem API)
+      const raw = await AsyncStorage.getItem('@orbit_users');
+      if (raw) {
+        const users: any[] = JSON.parse(raw);
+        const localUser = users.find(
+          (u) => u.email.toLowerCase() === email.trim().toLowerCase() && u.senha === senha
+        );
+        if (localUser) {
+          const fakeToken = 'local_token_' + localUser.email;
+          const fakeUserData = { id: Date.now(), nome: localUser.nome, email: localUser.email, municipio: localUser.municipio, cargo: localUser.cargo };
+          
+          await AsyncStorage.setItem('@orbit_token', fakeToken);
+          await AsyncStorage.setItem('@orbit_user', JSON.stringify(fakeUserData));
+          
+          setUser(fakeUserData);
+          setToken(fakeToken);
+          return;
+        }
+      }
+      // Se não encontrar o usuário localmente, lança o erro da API novamente
+      throw error;
+    }
   }
 
   async function logout() {
