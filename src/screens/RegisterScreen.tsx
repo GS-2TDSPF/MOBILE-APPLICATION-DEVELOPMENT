@@ -134,26 +134,26 @@ export default function RegisterScreen({ navigation }: any) {
 
         <View style={styles.card}>
           <Field label="NOME COMPLETO" icon="user" placeholder="Ex: João da Silva"
-            value={form.nome} onChangeText={(v) => updateField('nome', v)} error={errors.nome} />
+            value={form.nome} onChangeText={(v: string) => updateField('nome', v)} error={errors.nome} />
           <Field label="E-MAIL INSTITUCIONAL" icon="mail" placeholder="seu@municipio.gov.br"
-            value={form.email} onChangeText={(v) => updateField('email', v)} error={errors.email}
+            value={form.email} onChangeText={(v: string) => updateField('email', v)} error={errors.email}
             keyboardType="email-address" autoCapitalize="none" />
           <Field label="MUNICÍPIO" icon="map-pin" placeholder="Ex: São Paulo, SP"
-            value={form.municipio} onChangeText={(v) => updateField('municipio', v)} error={errors.municipio} />
+            value={form.municipio} onChangeText={(v: string) => updateField('municipio', v)} error={errors.municipio} />
           <Field label="CARGO / FUNÇÃO" icon="briefcase" placeholder="Ex: Secretário de Defesa Civil"
-            value={form.cargo} onChangeText={(v) => updateField('cargo', v)} error={errors.cargo} />
+            value={form.cargo} onChangeText={(v: string) => updateField('cargo', v)} error={errors.cargo} />
 
           {/* Senha */}
           <PasswordField
             label="SENHA" placeholder="Mínimo 6 caracteres"
-            value={form.senha} onChangeText={(v) => updateField('senha', v)}
+            value={form.senha} onChangeText={(v: string) => updateField('senha', v)}
             show={showSenha} onToggle={() => setShowSenha(!showSenha)} error={errors.senha}
           />
 
           {/* Confirmar Senha */}
           <PasswordField
             label="CONFIRMAR SENHA" placeholder="Repita a senha"
-            value={form.confirmarSenha} onChangeText={(v) => updateField('confirmarSenha', v)}
+            value={form.confirmarSenha} onChangeText={(v: string) => updateField('confirmarSenha', v)}
             show={showConfirmar} onToggle={() => setShowConfirmar(!showConfirmar)} error={errors.confirmarSenha}
           />
 

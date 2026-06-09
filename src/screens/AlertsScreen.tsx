@@ -97,7 +97,7 @@ export default function AlertsScreen({ navigation }: any) {
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.container}>
-      {/* Barra de busca */}}
+      {/* Barra de busca */}
       <View style={styles.searchRow}>
         <View style={styles.searchWrapper}>
           <Feather name="search" size={16} color={COLORS.textMuted} />

@@ -8,7 +8,7 @@ import { useAlertContext } from '../contexts/AlertContext';
 import { alertService } from '../services/alertService';
 import { RiskBadge } from '../components/RiskBadge';
 import { LoadingOverlay } from '../components/LoadingOverlay';
-import { timeAgo, formatFullDate } from '../utils/dateFormatter';
+import { timeAgo, formatDateTime } from '../utils/dateFormatter';
 import { RISK_COLORS, RISK_LABELS } from '../utils/riskColors';
 import { COLORS, FONTS, RADIUS } from '../utils/theme';
 import { Alert } from '../types/Alert';
@@ -94,6 +94,7 @@ export default function AlertDetailScreen({ route, navigation }: any) {
   const acoes = RISK_ACTIONS[alert.nivel] ?? [];
 
   function handleOpenMap() {
+    if (!alert) return;
     const label = encodeURIComponent(`${alert.municipio}, ${alert.estado}`);
     const lat = alert.latitude;
     const lng = alert.longitude;
@@ -107,6 +108,7 @@ export default function AlertDetailScreen({ route, navigation }: any) {
   }
 
   async function handleShare() {
+    if (!alert) return;
     try {
       const nivelLabel = RISK_LABELS[alert.nivel] ?? `Nível ${alert.nivel}`;
       await Share.share({
@@ -116,7 +118,7 @@ export default function AlertDetailScreen({ route, navigation }: any) {
           `📍 ${alert.municipio}, ${alert.estado}\n` +
           `⚠️ Risco: ${nivelLabel} (Nível ${alert.nivel}/5)\n` +
           `🌊 Tipo: ${tipoInfo.label}\n` +
-          `📅 ${formatFullDate(alert.dataHora)}\n\n` +
+          `📅 ${formatDateTime(alert.dataHora)}\n\n` +
           `${alert.descricao}\n\n` +
           `— Plataforma OrbitAlert | ESA Copernicus Sentinel-1`,
       });
@@ -159,7 +161,7 @@ export default function AlertDetailScreen({ route, navigation }: any) {
 
         <View style={styles.infoRow}>
           <Feather name="clock" size={15} color={COLORS.textMuted} />
-          <Text style={styles.infoText}>{formatFullDate(alert.dataHora)}</Text>
+          <Text style={styles.infoText}>{formatDateTime(alert.dataHora)}</Text>
           <Text style={styles.infoMuted}>· {timeAgo(alert.dataHora)}</Text>
         </View>
 

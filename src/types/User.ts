@@ -4,6 +4,7 @@ export interface User {
   nome: string;
   email: string;
   municipio?: string;
+  cargo?: string;
   role?: string;
 }
 

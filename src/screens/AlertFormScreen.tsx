@@ -190,7 +190,7 @@ export default function AlertFormScreen({ navigation, route }: Props) {
               <Input
                 placeholder="SP"
                 value={estado}
-                onChangeText={(v) => setEstado(v.toUpperCase())}
+                onChangeText={(v: string) => setEstado(v.toUpperCase())}
                 icon="flag"
                 maxLength={2}
               />

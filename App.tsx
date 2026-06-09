@@ -35,7 +35,7 @@ export default function App() {
     <SafeAreaProvider>
       <AuthProvider>
         <AlertProvider>
-          <StatusBar style="light" backgroundColor="#0B0F1A" />
+          <StatusBar style="light" />
           <AppNavigator />
         </AlertProvider>
       </AuthProvider>
