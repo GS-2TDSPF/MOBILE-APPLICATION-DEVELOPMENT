@@ -5,10 +5,9 @@ import {
   KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import { alertService } from '../services/alertService';
 import { useAlertContext } from '../contexts/AlertContext';
 import { Alert, RiskLevel } from '../types/Alert';
-import { RISK_COLORS, RISK_LABELS } from '../utils/riskColors';
+import { RISK_COLORS } from '../utils/riskColors';
 import { COLORS, FONTS, RADIUS } from '../utils/theme';
 
 type TipoDesastre = 'ENCHENTE' | 'DESLIZAMENTO' | 'SECA' | 'OUTROS';
@@ -37,7 +36,7 @@ export default function AlertFormScreen({ navigation, route }: Props) {
   const alertToEdit: Alert | undefined = route.params?.alert;
   const isEditing = !!alertToEdit;
 
-  const { refresh } = useAlertContext();
+  const { refresh, createAlert, updateAlert } = useAlertContext();
 
   const [titulo, setTitulo] = useState(alertToEdit?.titulo ?? '');
   const [descricao, setDescricao] = useState(alertToEdit?.descricao ?? '');
@@ -92,14 +91,13 @@ export default function AlertFormScreen({ navigation, route }: Props) {
       };
 
       if (isEditing) {
-        await alertService.update(alertToEdit!.id, payload);
+        await updateAlert(alertToEdit!.id, payload);
         RNAlert.alert('✅ Alerta atualizado', 'As informações foram salvas com sucesso.');
       } else {
-        await alertService.create(payload);
+        await createAlert(payload);
         RNAlert.alert('✅ Alerta criado', 'O novo alerta foi registrado com sucesso.');
       }
 
-      await refresh();
       navigation.goBack();
     } catch (err: any) {
       const status = err?.response?.status;

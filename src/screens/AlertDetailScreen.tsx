@@ -1,11 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, Linking, Platform, Share, Alert as RNAlert, ActivityIndicator,
 } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAlertContext } from '../contexts/AlertContext';
-import { alertService } from '../services/alertService';
 import { RiskBadge } from '../components/RiskBadge';
 import { LoadingOverlay } from '../components/LoadingOverlay';
 import { timeAgo, formatDateTime } from '../utils/dateFormatter';
@@ -46,7 +45,7 @@ const RISK_ACTIONS: Record<number, string[]> = {
 
 export default function AlertDetailScreen({ route, navigation }: any) {
   const { alertId } = route.params;
-  const { alerts, isLoading, refresh } = useAlertContext();
+  const { alerts, isLoading, deleteAlert } = useAlertContext();
   const alert = alerts.find((a) => a.id === alertId);
   const [isDeleting, setIsDeleting] = React.useState(false);
 
@@ -61,8 +60,7 @@ export default function AlertDetailScreen({ route, navigation }: any) {
           onPress: async () => {
             setIsDeleting(true);
             try {
-              await alertService.delete(alertId);
-              await refresh();
+              await deleteAlert(alertId);
               RNAlert.alert('✅ Excluído', 'Alerta removido com sucesso.');
               navigation.goBack();
             } catch (err: any) {
