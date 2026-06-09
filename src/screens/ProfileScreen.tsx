@@ -81,6 +81,14 @@ export default function ProfileScreen({ navigation }: any) {
             </View>
             <Feather name="chevron-right" size={18} color={COLORS.textMuted} />
           </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate('Developers')}>
+            <View style={styles.actionLeft}>
+              <Feather name="code" size={18} color={COLORS.textPrimary} />
+              <Text style={styles.actionText}>Desenvolvedores</Text>
+            </View>
+            <Feather name="chevron-right" size={18} color={COLORS.textMuted} />
+          </TouchableOpacity>
         </View>
       </View>
 

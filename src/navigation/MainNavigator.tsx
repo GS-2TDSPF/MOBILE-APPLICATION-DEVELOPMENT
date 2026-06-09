@@ -11,6 +11,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import NotificationsScreen from '../screens/settings/NotificationsScreen';
 import SecurityScreen from '../screens/settings/SecurityScreen';
 import HelpScreen from '../screens/settings/HelpScreen';
+import DevelopersScreen from '../screens/settings/DevelopersScreen';
 import { COLORS, FONTS } from '../utils/theme';
 
 const Tab = createBottomTabNavigator();
@@ -61,6 +62,11 @@ function ProfileStackNav() {
         name="Help"
         component={HelpScreen}
         options={{ title: 'Central de Ajuda' }}
+      />
+      <ProfileStack.Screen
+        name="Developers"
+        component={DevelopersScreen}
+        options={{ title: 'Desenvolvedores' }}
       />
     </ProfileStack.Navigator>
   );
