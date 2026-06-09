@@ -21,21 +21,8 @@
 ## 🎬 Vídeo de Demonstração
 
 > ▶️ **[Assistir no YouTube](https://www.youtube.com/watch?v=LINK_DO_VIDEO_AQUI)**
->
-> *(Substitua o link acima pelo link real do vídeo no YouTube após a gravação)*
 
 ---
-
-## 👥 Integrantes do Grupo
-
-| Nome Completo | RM |
-|---|---|
-| Nome Desenvolvedor 1 | RM000000 |
-| Nome Desenvolvedor 2 | RM000000 |
-| Nome Desenvolvedor 3 | RM000000 |
-| Nome Desenvolvedor 4 | RM000000 |
-
-> ✏️ *Substitua os nomes e RMs acima pelos dados reais da equipe*
 
 ---
 
