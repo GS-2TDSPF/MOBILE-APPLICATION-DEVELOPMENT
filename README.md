@@ -18,6 +18,47 @@
 
 ---
 
+## 🎬 Vídeo de Demonstração
+
+> ▶️ **[Assistir no YouTube](https://www.youtube.com/watch?v=LINK_DO_VIDEO_AQUI)**
+>
+> *(Substitua o link acima pelo link real do vídeo no YouTube após a gravação)*
+
+---
+
+## 👥 Integrantes do Grupo
+
+| Nome Completo | RM |
+|---|---|
+| Nome Desenvolvedor 1 | RM000000 |
+| Nome Desenvolvedor 2 | RM000000 |
+| Nome Desenvolvedor 3 | RM000000 |
+| Nome Desenvolvedor 4 | RM000000 |
+
+> ✏️ *Substitua os nomes e RMs acima pelos dados reais da equipe*
+
+---
+
+## 💡 Descrição da Solução — Global Solution 2026
+
+**Tema:** Monitoramento e Prevenção de Desastres Naturais via Tecnologia Espacial
+
+O **OrbitAlert** é uma solução mobile que utiliza dados do satélite **Sentinel-1** da ESA (Agência Espacial Europeia) para monitorar, alertar e orientar equipes de Defesa Civil municipal diante de desastres naturais como enchentes, deslizamentos e secas.
+
+**Problema abordado:** O Brasil sofre anualmente com desastres naturais que causam mortes e prejuízos econômicos. A falta de sistemas de alerta precoce acessíveis a gestores públicos municipais — que são os primeiros a responder às emergências — é um dos principais gargalos na gestão de crises.
+
+**Como resolvemos:** Desenvolvemos um aplicativo que:
+- Integra dados de satélite de radar SAR (Sentinel-1) com atualização a cada 6–12 dias
+- Exibe alertas georeferenciados com nível de risco (1 a 5) e ações recomendadas
+- Monitora uma rede de sensores IoT (pluviômetros, nível de rios, inclinômetros)
+- Permite criar, editar, consultar e excluir alertas diretamente pelo celular via API REST
+- Funciona offline com cache local, garantindo operação mesmo sem internet
+- Envia vibração automática ao detectar novos alertas críticos em tempo real
+
+**Impacto esperado:** Redução do tempo de resposta a emergências por gestores municipais, aumentando a capacidade de evacuação preventiva e salvando vidas.
+
+---
+
 ## 📋 Índice
 
 - [Sobre o Projeto](#-sobre-o-projeto)

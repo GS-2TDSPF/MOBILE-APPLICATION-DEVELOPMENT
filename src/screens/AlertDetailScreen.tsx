@@ -1,10 +1,11 @@
 import React from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, Linking, Platform, Share, Alert as RNAlert,
+  TouchableOpacity, Linking, Platform, Share, Alert as RNAlert, ActivityIndicator,
 } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAlertContext } from '../contexts/AlertContext';
+import { alertService } from '../services/alertService';
 import { RiskBadge } from '../components/RiskBadge';
 import { LoadingOverlay } from '../components/LoadingOverlay';
 import { timeAgo, formatFullDate } from '../utils/dateFormatter';
@@ -45,8 +46,35 @@ const RISK_ACTIONS: Record<number, string[]> = {
 
 export default function AlertDetailScreen({ route, navigation }: any) {
   const { alertId } = route.params;
-  const { alerts, isLoading } = useAlertContext();
+  const { alerts, isLoading, refresh } = useAlertContext();
   const alert = alerts.find((a) => a.id === alertId);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
+  async function handleDelete() {
+    RNAlert.alert(
+      'Excluir Alerta',
+      `Tem certeza que deseja excluir "${alert?.titulo}"? Esta ação não pode ser desfeita.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir', style: 'destructive',
+          onPress: async () => {
+            setIsDeleting(true);
+            try {
+              await alertService.delete(alertId);
+              await refresh();
+              RNAlert.alert('✅ Excluído', 'Alerta removido com sucesso.');
+              navigation.goBack();
+            } catch (err: any) {
+              RNAlert.alert('❌ Erro', err?.response?.data?.message ?? 'Não foi possível excluir.');
+            } finally {
+              setIsDeleting(false);
+            }
+          },
+        },
+      ]
+    );
+  }
 
   if (isLoading && !alert) return <LoadingOverlay message="Carregando detalhes..." />;
   if (!alert) {
@@ -216,6 +244,23 @@ export default function AlertDetailScreen({ route, navigation }: any) {
           <Feather name="map-pin" size={18} color="#FFF" />
           <Text style={styles.btnPrimaryText}>Abrir no Mapa</Text>
         </TouchableOpacity>
+        <View style={styles.rowActions}>
+          <TouchableOpacity style={styles.btnEdit} onPress={() => navigation.navigate('AlertForm', { alert })}>
+            <Feather name="edit-2" size={16} color={COLORS.primary} />
+            <Text style={styles.btnEditText}>Editar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.btnDelete, isDeleting && { opacity: 0.6 }]}
+            onPress={handleDelete}
+            disabled={isDeleting}
+          >
+            {isDeleting
+              ? <ActivityIndicator size="small" color={COLORS.danger} />
+              : <Feather name="trash-2" size={16} color={COLORS.danger} />
+            }
+            <Text style={styles.btnDeleteText}>Excluir</Text>
+          </TouchableOpacity>
+        </View>
         <TouchableOpacity style={styles.btnSecondary} onPress={handleShare}>
           <Feather name="share-2" size={18} color={COLORS.primary} />
           <Text style={styles.btnSecondaryText}>Compartilhar Alerta</Text>
@@ -322,4 +367,17 @@ const styles = StyleSheet.create({
     gap: 8, paddingVertical: 14,
   },
   btnGhostText: { color: COLORS.textMuted, fontSize: 13, fontFamily: FONTS.medium },
+  rowActions: { flexDirection: 'row', gap: 10 },
+  btnEdit: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    paddingVertical: 14, borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: COLORS.primary, backgroundColor: `${COLORS.primary}10`,
+  },
+  btnEditText: { color: COLORS.primary, fontSize: 14, fontFamily: FONTS.semiBold },
+  btnDelete: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    paddingVertical: 14, borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: COLORS.danger, backgroundColor: `${COLORS.danger}10`,
+  },
+  btnDeleteText: { color: COLORS.danger, fontSize: 14, fontFamily: FONTS.semiBold },
 });

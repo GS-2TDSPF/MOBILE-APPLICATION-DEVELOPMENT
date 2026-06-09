@@ -6,6 +6,7 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import DashboardScreen from '../screens/DashboardScreen';
 import AlertsScreen from '../screens/AlertsScreen';
 import AlertDetailScreen from '../screens/AlertDetailScreen';
+import AlertFormScreen from '../screens/AlertFormScreen';
 import SensorsScreen from '../screens/SensorsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import NotificationsScreen from '../screens/settings/NotificationsScreen';
@@ -31,6 +32,7 @@ function AlertsStackNav() {
     <AlertStack.Navigator screenOptions={HEADER_OPTIONS}>
       <AlertStack.Screen name="AlertsList" component={AlertsScreen} options={{ title: 'Alertas' }} />
       <AlertStack.Screen name="AlertDetail" component={AlertDetailScreen} options={{ title: 'Detalhe do Alerta' }} />
+      <AlertStack.Screen name="AlertForm" component={AlertFormScreen} options={{ title: 'Novo Alerta' }} />
     </AlertStack.Navigator>
   );
 }
@@ -40,6 +42,7 @@ function DashboardStackNav() {
     <DashStack.Navigator screenOptions={HEADER_OPTIONS}>
       <DashStack.Screen name="DashboardMain" component={DashboardScreen} options={{ title: 'Dashboard' }} />
       <DashStack.Screen name="AlertDetail" component={AlertDetailScreen} options={{ title: 'Detalhe do Alerta' }} />
+      <DashStack.Screen name="AlertForm" component={AlertFormScreen} options={{ title: 'Novo Alerta' }} />
     </DashStack.Navigator>
   );
 }

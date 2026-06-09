@@ -95,8 +95,9 @@ export default function AlertsScreen({ navigation }: any) {
   if (isLoading && alerts.length === 0) return <LoadingOverlay message="Carregando alertas..." />;
 
   return (
-    <View style={styles.container}>
-      {/* Barra de busca */}
+    <View style={{ flex: 1 }}>
+      <View style={styles.container}>
+      {/* Barra de busca */}}
       <View style={styles.searchRow}>
         <View style={styles.searchWrapper}>
           <Feather name="search" size={16} color={COLORS.textMuted} />
@@ -266,6 +267,15 @@ export default function AlertsScreen({ navigation }: any) {
           </View>
         }
       />
+      </View>
+
+      {/* FAB - Criar novo alerta */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => navigation.navigate('AlertForm', {})}
+      >
+        <Feather name="plus" size={24} color="#FFF" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -340,4 +350,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingVertical: 10, borderWidth: 1, borderColor: `${COLORS.primary}40`,
   },
   emptyBtnText: { color: COLORS.primary, fontSize: 13, fontFamily: FONTS.semiBold },
+  fab: {
+    position: 'absolute', bottom: 28, right: 20,
+    width: 56, height: 56, borderRadius: 28,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.5, shadowRadius: 12, elevation: 10,
+  },
 });
