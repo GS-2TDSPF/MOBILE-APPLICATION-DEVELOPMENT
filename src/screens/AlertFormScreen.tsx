@@ -55,14 +55,21 @@ export default function AlertFormScreen({ navigation, route }: Props) {
     navigation.setOptions({ title: isEditing ? 'Editar Alerta' : 'Novo Alerta' });
   }, []);
 
+  function normalize(val: string): string {
+    // aceita vírgula (padrão BR) e converte para ponto (padrão JS)
+    return val.trim().replace(',', '.');
+  }
+
   function validate(): boolean {
     const e: Record<string, string> = {};
     if (!titulo.trim()) e.titulo = 'Título é obrigatório';
     if (!descricao.trim()) e.descricao = 'Descrição é obrigatória';
     if (!municipio.trim()) e.municipio = 'Município é obrigatório';
     if (!estado.trim() || estado.length !== 2) e.estado = 'Informe a UF (ex: SP)';
-    if (!latitude.trim() || isNaN(Number(latitude))) e.latitude = 'Latitude inválida';
-    if (!longitude.trim() || isNaN(Number(longitude))) e.longitude = 'Longitude inválida';
+    const latNum = Number(normalize(latitude));
+    const lonNum = Number(normalize(longitude));
+    if (!latitude.trim() || isNaN(latNum) || latNum < -90  || latNum > 90)  e.latitude  = 'Inválida. Ex: -23.5505';
+    if (!longitude.trim() || isNaN(lonNum) || lonNum < -180 || lonNum > 180) e.longitude = 'Inválida. Ex: -46.6333';
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -76,8 +83,8 @@ export default function AlertFormScreen({ navigation, route }: Props) {
         descricao: descricao.trim(),
         municipio: municipio.trim(),
         estado: estado.trim().toUpperCase(),
-        latitude: Number(latitude),
-        longitude: Number(longitude),
+        latitude: Number(normalize(latitude)),
+        longitude: Number(normalize(longitude)),
         nivel,
         tipoDesastre: tipo,
         ativo,
@@ -203,22 +210,24 @@ export default function AlertFormScreen({ navigation, route }: Props) {
           <View style={{ flex: 1 }}>
             <Field label="LATITUDE" error={errors.latitude}>
               <Input
-                placeholder="-23.5505"
+                placeholder="Ex: -23.5505"
                 value={latitude}
                 onChangeText={setLatitude}
                 icon="navigation"
-                keyboardType="decimal-pad"
+                keyboardType="default"
+                hint="Use ponto ou vírgula"
               />
             </Field>
           </View>
           <View style={{ flex: 1 }}>
             <Field label="LONGITUDE" error={errors.longitude}>
               <Input
-                placeholder="-46.6333"
+                placeholder="Ex: -46.6333"
                 value={longitude}
                 onChangeText={setLongitude}
                 icon="navigation"
-                keyboardType="decimal-pad"
+                keyboardType="default"
+                hint="Use ponto ou vírgula"
               />
             </Field>
           </View>
