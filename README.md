@@ -26,17 +26,6 @@
 
 ---
 
-## 👥 Integrantes do Grupo
-
-| Nome Completo | RM |
-|---|---|
-| Nome Desenvolvedor 1 | RM000000 |
-| Nome Desenvolvedor 2 | RM000000 |
-| Nome Desenvolvedor 3 | RM000000 |
-| Nome Desenvolvedor 4 | RM000000 |
-
-> ✏️ *Substitua os nomes e RMs acima pelos dados reais da equipe*
-
 ---
 
 ## 💡 Descrição da Solução — Global Solution 2026
