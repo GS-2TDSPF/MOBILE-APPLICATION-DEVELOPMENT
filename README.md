@@ -445,10 +445,10 @@ interface User {
 
 | | Nome | RM | Papel | GitHub | LinkedIn |
 |--|------|----|-------|--------|----------|
-| <img src="assets/images/dev1.jpg" width="50" style="border-radius:50%"> | **Nome Desenvolvedor 1** | RM: 000000 | Mobile Developer | [GitHub](https://github.com/) | [LinkedIn](https://linkedin.com/in/) |
-| <img src="assets/images/dev2.jpg" width="50" style="border-radius:50%"> | **Nome Desenvolvedor 2** | RM: 000000 | Backend Developer | [GitHub](https://github.com/) | [LinkedIn](https://linkedin.com/in/) |
-| <img src="assets/images/dev3.jpg" width="50" style="border-radius:50%"> | **Nome Desenvolvedor 3** | RM: 000000 | Full Stack Developer | [GitHub](https://github.com/) | [LinkedIn](https://linkedin.com/in/) |
-| <img src="assets/images/dev4.jpg" width="50" style="border-radius:50%"> | **Nome Desenvolvedor 4** | RM: 000000 | Frontend Developer | [GitHub](https://github.com/) | [LinkedIn](https://linkedin.com/in/) |
+| <img src="assets/images/dev1.jpg" width="50" style="border-radius:50%"> | **Moisés Waidemann** | RM: 563719 | Backend Developer | [GitHub](https://github.com/https://github.com/Waidemannm) | [LinkedIn](https://www.linkedin.com/in/moises-waidemann/) |
+| <img src="assets/images/dev2.jpg" width="50" style="border-radius:50%"> | **Richard Freitas** | RM: 566127 | Mobile Developer | [GitHub](https://github.com/rickk1stdev) | [LinkedIn](https://www.linkedin.com/in/richard-freitas/) |
+| <img src="assets/images/dev3.jpg" width="50" style="border-radius:50%"> | **Gabriel Sbrana** | RM: 565849 | Full Stack Developer | [GitHub](https://github.com/devsbrana) | [LinkedIn](https://www.linkedin.com/in/gabriel-sbrana-campos/) |
+| <img src="assets/images/dev4.jpg" width="50" style="border-radius:50%"> | **Thiago Mota** | RM: 563650 | Full Stack Developer | [GitHub](https://github.com/ThiagoMoota) | [LinkedIn](https://www.linkedin.com/in/thiagomoota/) |
 
 > ✏️ **Para editar:** atualize os nomes, RMs e links diretamente neste arquivo e também em [`src/screens/settings/DevelopersScreen.tsx`](src/screens/settings/DevelopersScreen.tsx)
 
