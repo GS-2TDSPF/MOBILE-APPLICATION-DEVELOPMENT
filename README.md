@@ -21,8 +21,6 @@
 ## 🎬 Vídeo de Demonstração
 
 > ▶️ **[Assistir no YouTube](https://www.youtube.com/watch?v=LINK_DO_VIDEO_AQUI)**
->
-> *(Substitua o link acima pelo link real do vídeo no YouTube após a gravação)*
 
 ---
 
