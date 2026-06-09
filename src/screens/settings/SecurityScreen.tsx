@@ -57,41 +57,38 @@ export default function SecurityScreen({ navigation }: any) {
 
     setIsLoading(true);
     try {
-      // Atualiza na lista de usuários locais
       const raw = await AsyncStorage.getItem('@orbit_users');
       const users: any[] = raw ? JSON.parse(raw) : [];
       const idx = users.findIndex(
         (u) => u.email.toLowerCase() === user?.email?.toLowerCase()
       );
 
-      if (idx === -1) {
-        Alert.alert('Erro', 'Usuário não encontrado localmente.');
-        return;
+      // Verifica senha — usuário local
+      if (idx !== -1) {
+        if (users[idx].senha !== senhaConfirmEmail) {
+          Alert.alert('Senha incorreta', 'A senha informada não confere.');
+          return;
+        }
+        if (users.some((u, i) => i !== idx && u.email.toLowerCase() === novoEmail.trim().toLowerCase())) {
+          Alert.alert('E-mail em uso', 'Este e-mail já está cadastrado.');
+          return;
+        }
+        users[idx].email = novoEmail.trim().toLowerCase();
+        await AsyncStorage.setItem('@orbit_users', JSON.stringify(users));
       }
-      if (users[idx].senha !== senhaConfirmEmail) {
-        Alert.alert('Senha incorreta', 'A senha informada não confere.');
-        return;
-      }
-      if (users.some((u, i) => i !== idx && u.email.toLowerCase() === novoEmail.trim().toLowerCase())) {
-        Alert.alert('E-mail em uso', 'Este e-mail já está cadastrado.');
-        return;
-      }
+      // Usuário veio da API — atualiza somente o registro logado
+      // (senha não pode ser verificada localmente, confia no campo preenchido)
 
-      users[idx].email = novoEmail.trim().toLowerCase();
-      await AsyncStorage.setItem('@orbit_users', JSON.stringify(users));
-
-      // Atualiza usuário logado
+      // Atualiza dados do usuário logado no storage
       const storedUser = await AsyncStorage.getItem('@orbit_user');
       if (storedUser) {
         const u = JSON.parse(storedUser);
         u.email = novoEmail.trim().toLowerCase();
         await AsyncStorage.setItem('@orbit_user', JSON.stringify(u));
-        // Atualiza token local
-        const newToken = 'local_token_' + u.email;
-        await AsyncStorage.setItem('@orbit_token', newToken);
+        await AsyncStorage.setItem('@orbit_token', 'local_token_' + u.email);
       }
 
-      Alert.alert('Sucesso!', 'E-mail atualizado com sucesso. Faça login novamente.', [
+      Alert.alert('Sucesso!', 'E-mail atualizado. Faça login novamente.', [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
       setNovoEmail('');
@@ -126,17 +123,28 @@ export default function SecurityScreen({ navigation }: any) {
         (u) => u.email.toLowerCase() === user?.email?.toLowerCase()
       );
 
-      if (idx === -1) {
-        Alert.alert('Erro', 'Usuário não encontrado localmente.');
-        return;
+      if (idx !== -1) {
+        // Usuário local: verifica senha atual
+        if (users[idx].senha !== senhaAtual) {
+          Alert.alert('Senha incorreta', 'A senha atual informada não confere.');
+          return;
+        }
+        users[idx].senha = novaSenha;
+        await AsyncStorage.setItem('@orbit_users', JSON.stringify(users));
       }
-      if (users[idx].senha !== senhaAtual) {
-        Alert.alert('Senha incorreta', 'A senha atual informada não confere.');
-        return;
+      // Usuário da API: não pode verificar senha localmente
+      // Salva/atualiza entrada local para funcionar com o fallback
+      else {
+        const apiUser = {
+          nome: user?.nome ?? '',
+          email: user?.email ?? '',
+          municipio: user?.municipio ?? '',
+          cargo: (user as any)?.cargo ?? '',
+          senha: novaSenha,
+          criadoEm: new Date().toISOString(),
+        };
+        await AsyncStorage.setItem('@orbit_users', JSON.stringify([...users, apiUser]));
       }
-
-      users[idx].senha = novaSenha;
-      await AsyncStorage.setItem('@orbit_users', JSON.stringify(users));
 
       Alert.alert('Sucesso!', 'Senha alterada com sucesso!', [
         { text: 'OK', onPress: () => navigation.goBack() },

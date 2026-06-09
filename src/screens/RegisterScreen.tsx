@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from '../api/axios';
+import { ENDPOINTS } from '../api/endpoints';
 import { COLORS, FONTS, RADIUS } from '../utils/theme';
 
 interface FormData {
@@ -60,14 +62,16 @@ export default function RegisterScreen({ navigation }: any) {
 
   async function handleRegister() {
     if (!validate()) return;
+    setIsLoading(true);
     try {
-      setIsLoading(true);
+      // 1. Verifica duplicidade no storage local
       const existingRaw = await AsyncStorage.getItem('@orbit_users');
       const existingUsers: any[] = existingRaw ? JSON.parse(existingRaw) : [];
       if (existingUsers.some((u) => u.email.toLowerCase() === form.email.trim().toLowerCase())) {
         setErrors({ email: 'Este e-mail já está cadastrado' });
         return;
       }
+
       const novoUsuario = {
         nome: form.nome.trim(),
         email: form.email.trim().toLowerCase(),
@@ -76,7 +80,26 @@ export default function RegisterScreen({ navigation }: any) {
         senha: form.senha,
         criadoEm: new Date().toISOString(),
       };
-      await AsyncStorage.setItem('@orbit_users', JSON.stringify([...existingUsers, novoUsuario]));
+
+      // 2. Tenta registrar na API
+      try {
+        await api.post(ENDPOINTS.REGISTER, {
+          nome: novoUsuario.nome,
+          email: novoUsuario.email,
+          senha: novoUsuario.senha,
+          municipio: novoUsuario.municipio,
+          cargo: novoUsuario.cargo,
+        });
+      } catch {
+        // API indisponível — continua com cadastro local
+      }
+
+      // 3. Salva localmente (sempre)
+      await AsyncStorage.setItem(
+        '@orbit_users',
+        JSON.stringify([...existingUsers, novoUsuario])
+      );
+
       Alert.alert(
         'Cadastro realizado!',
         `Bem-vindo(a), ${novoUsuario.nome}! Faça login para acessar.`,

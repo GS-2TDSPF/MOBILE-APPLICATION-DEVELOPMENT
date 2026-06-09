@@ -49,6 +49,7 @@ export function AlertProvider({ children }: { children: ReactNode }) {
       if (raw) {
         const { data } = JSON.parse(raw);
         setAlerts(data);
+        // ✅ Inicializa os IDs conhecidos com os do cache para evitar vibração falsa no primeiro fetch
         prevAlertIdsRef.current = new Set(data.map((a: AlertType) => a.id));
       }
     } catch {}
