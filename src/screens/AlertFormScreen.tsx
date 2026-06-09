@@ -102,8 +102,18 @@ export default function AlertFormScreen({ navigation, route }: Props) {
       await refresh();
       navigation.goBack();
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? err?.message ?? 'Erro desconhecido';
-      RNAlert.alert('❌ Erro', `Não foi possível salvar o alerta.\n\n${msg}`);
+      const status = err?.response?.status;
+      let msg = err?.response?.data?.message ?? err?.message ?? 'Erro desconhecido';
+
+      if (status === 403 || status === 401) {
+        msg = 'Sem autorização. Faça logout e login novamente para obter um token válido da API.';
+      } else if (status === 400) {
+        msg = 'Dados inválidos. Verifique os campos e tente novamente.';
+      } else if (!status) {
+        msg = 'Sem conexão com o servidor. Verifique sua internet.';
+      }
+
+      RNAlert.alert('❌ Erro ao salvar', msg);
     } finally {
       setIsLoading(false);
     }
